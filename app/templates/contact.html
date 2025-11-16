@@ -1,0 +1,734 @@
+{% extends "base.html" %}
+
+{% block title %}კონტაქტი - MAD-MEN Barbershop{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Page Header */
+    .page-header {
+        padding: 150px 30px 80px;
+        text-align: center;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(183, 125, 74, 0.1) 0%, transparent 70%);
+        bottom: -100px;
+        right: 15%;
+        animation: pulse 7s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 0.8; }
+    }
+    
+    .page-header-content {
+        max-width: 800px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .page-badge {
+        display: inline-block;
+        background: rgba(199, 36, 177, 0.1);
+        border: 1px solid #C724B1;
+        padding: 8px 20px;
+        border-radius: 20px;
+        color: #C724B1;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    .page-header h1 {
+        font-size: 56px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #ffffff, #B07D4A);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .page-header p {
+        font-size: 18px;
+        color: #999;
+        line-height: 1.6;
+    }
+    
+    /* Contact Container */
+    .contact-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 80px 30px;
+    }
+    
+    /* Contact Grid */
+    .contact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        margin-bottom: 80px;
+    }
+    
+    /* Contact Form */
+    .contact-form-card {
+        background: #1a1a1a;
+        border: 1px solid rgba(183, 125, 74, 0.2);
+        border-radius: 25px;
+        padding: 40px;
+    }
+    
+    .form-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 10px;
+    }
+    
+    .form-subtitle {
+        color: #999;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        color: #999;
+        font-size: 14px;
+        margin-bottom: 10px;
+        font-weight: 500;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 14px 18px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(183, 125, 74, 0.2);
+        border-radius: 12px;
+        color: #ffffff;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        font-family: 'Poppins', sans-serif;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #B07D4A;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 3px rgba(183, 125, 74, 0.1);
+    }
+    
+    .form-control::placeholder {
+        color: #666;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+    
+    .btn-submit {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        color: #ffffff;
+        border: none;
+        border-radius: 15px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(183, 125, 74, 0.4);
+    }
+    
+    /* Contact Info Cards */
+    .contact-info {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+    }
+    
+    .info-card {
+        background: #1a1a1a;
+        border: 1px solid rgba(183, 125, 74, 0.2);
+        border-radius: 20px;
+        padding: 30px;
+        transition: all 0.3s ease;
+    }
+    
+    .info-card:hover {
+        border-color: #B07D4A;
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(183, 125, 74, 0.2);
+    }
+    
+    .info-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
+        background: linear-gradient(135deg, rgba(183, 125, 74, 0.2), rgba(199, 36, 177, 0.2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+    
+    .info-card h3 {
+        font-size: 20px;
+        color: #B07D4A;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+    
+    .info-card p {
+        color: #999;
+        line-height: 1.7;
+        margin-bottom: 8px;
+    }
+    
+    .info-card a {
+        color: #C724B1;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .info-card a:hover {
+        color: #B07D4A;
+    }
+    
+    /* Working Hours */
+    .hours-list {
+        margin-top: 15px;
+    }
+    
+    .hours-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(183, 125, 74, 0.1);
+    }
+    
+    .hours-row:last-child {
+        border-bottom: none;
+    }
+    
+    .day {
+        color: #999;
+    }
+    
+    .time {
+        color: #ffffff;
+        font-weight: 600;
+    }
+    
+    /* Map Section */
+    .map-section {
+        background: #1a1a1a;
+        border: 1px solid rgba(183, 125, 74, 0.2);
+        border-radius: 25px;
+        overflow: hidden;
+        height: 450px;
+        margin-bottom: 80px;
+    }
+    
+    .map-section iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        filter: grayscale(20%) contrast(1.2);
+    }
+    
+    /* Reviews Section */
+    .reviews-section {
+        margin-bottom: 80px;
+    }
+    
+    .reviews-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+    
+    .reviews-title {
+        font-size: 38px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        background: linear-gradient(135deg, #ffffff, #C724B1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .reviews-subtitle {
+        color: #999;
+        font-size: 16px;
+    }
+    
+    .reviews-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 30px;
+    }
+    
+    .review-card {
+        background: #1a1a1a;
+        border: 1px solid rgba(183, 125, 74, 0.2);
+        border-radius: 20px;
+        padding: 35px;
+        transition: all 0.3s ease;
+    }
+    
+    .review-card:hover {
+        border-color: #B07D4A;
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(183, 125, 74, 0.2);
+    }
+    
+    .review-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .reviewer-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 700;
+        color: #ffffff;
+    }
+    
+    .reviewer-info {
+        flex: 1;
+    }
+    
+    .reviewer-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 5px;
+    }
+    
+    .review-stars {
+        color: #FFD700;
+        font-size: 16px;
+        letter-spacing: 2px;
+    }
+    
+    .review-date {
+        font-size: 13px;
+        color: #666;
+        margin-top: 3px;
+    }
+    
+    .review-text {
+        color: #999;
+        line-height: 1.7;
+        font-size: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .review-source {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: rgba(183, 125, 74, 0.1);
+        border-radius: 15px;
+        font-size: 13px;
+        color: #B07D4A;
+        font-weight: 600;
+    }
+    
+    /* Social Section */
+    .social-section {
+        text-align: center;
+        margin-top: 80px;
+        padding: 60px 40px;
+        background: #1a1a1a;
+        border-radius: 25px;
+    }
+    
+    .social-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 15px;
+    }
+    
+    .social-subtitle {
+        color: #999;
+        margin-bottom: 35px;
+        font-size: 16px;
+    }
+    
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .social-link {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: rgba(183, 125, 74, 0.1);
+        border: 2px solid rgba(183, 125, 74, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .social-link:hover {
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        border-color: transparent;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(183, 125, 74, 0.3);
+    }
+    
+    /* FAQ Section */
+    .faq-section {
+        margin-top: 80px;
+    }
+    
+    .faq-title {
+        text-align: center;
+        font-size: 38px;
+        font-weight: 700;
+        margin-bottom: 50px;
+        background: linear-gradient(135deg, #ffffff, #C724B1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .faq-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+    }
+    
+    .faq-item {
+        background: #1a1a1a;
+        border: 1px solid rgba(183, 125, 74, 0.2);
+        border-radius: 15px;
+        padding: 25px;
+        transition: all 0.3s ease;
+    }
+    
+    .faq-item:hover {
+        border-color: #B07D4A;
+        transform: translateY(-3px);
+    }
+    
+    .faq-question {
+        font-size: 16px;
+        color: #B07D4A;
+        font-weight: 600;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .faq-answer {
+        color: #999;
+        line-height: 1.7;
+        font-size: 14px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 968px) {
+        .contact-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .page-header h1 {
+            font-size: 38px;
+        }
+        
+        .faq-grid, .reviews-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header">
+    <div class="page-header-content">
+        <div class="page-badge">📞 დაგვიკავშირდით</div>
+        <h1>კონტაქტი</h1>
+        <p>გაქვთ კითხვა? გსურთ უფრო მეტის გაგება? ან უბრალოდ გინდათ მოგესალმოთ? ჩვენ აქ ვართ და მოხარულები ვიქნებით თქვენგან მოსმენით!</p>
+    </div>
+</section>
+
+<div class="contact-container">
+    
+    <!-- Contact Grid -->
+    <div class="contact-grid">
+        
+        <!-- Contact Form -->
+        <div class="contact-form-card">
+            <h2 class="form-title">გამოგვიგზავნეთ შეტყობინება</h2>
+            <p class="form-subtitle">შეავსეთ ფორმა და ჩვენ დაგიკავშირდებით რაც შეიძლება მალე. ჩვეულებრივ პასუხს ვცემთ 24 საათში.</p>
+            
+            <form method="POST">
+                <div class="form-group">
+                    <label class="form-label">სახელი *</label>
+                    <input type="text" name="name" class="form-control" placeholder="თქვენი სრული სახელი" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">ელ.ფოსტა *</label>
+                    <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">ტელეფონი *</label>
+                    <input type="tel" name="phone" class="form-control" placeholder="+995 555 123 456" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">თემა *</label>
+                    <input type="text" name="subject" class="form-control" placeholder="რის შესახებ გინდათ საუბარი?" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">შეტყობინება *</label>
+                    <textarea name="message" class="form-control" placeholder="დაწერეთ თქვენი შეტყობინება აქ..." required></textarea>
+                </div>
+                
+                <button type="submit" class="btn-submit">გაგზავნა →</button>
+            </form>
+        </div>
+        
+        <!-- Contact Info -->
+        <div class="contact-info">
+            
+            <!-- Location -->
+            <div class="info-card">
+                <div class="info-icon">📍</div>
+                <h3>მისამართი</h3>
+                <p>Barbershop MAD MEN</p>
+                <p>თბილისი, საქართველო</p>
+                <p style="margin-top: 10px;">
+                    <a href="https://www.google.com/maps/place/Barbershop+MAD+MEN/@41.7943795,44.8179901,17z/data=!3m1!4b1!4m6!3m5!1s0x40446d8d6aeafce7:0x14e3c42a731ef168!8m2!3d41.7943795!4d44.8179901" target="_blank">Google Maps-ზე ნახვა →</a>
+                </p>
+            </div>
+            
+            <!-- Phone -->
+            <div class="info-card">
+                <div class="info-icon">📞</div>
+                <h3>ტელეფონი</h3>
+                <p>მთავარი: <a href="tel:+995555123456">+995 555 123 456</a></p>
+                <p>WhatsApp: <a href="https://wa.me/995555123456">+995 555 123 456</a></p>
+                <p>Viber: <a href="viber://chat?number=995555123456">+995 555 123 456</a></p>
+            </div>
+            
+            <!-- Email -->
+            <div class="info-card">
+                <div class="info-icon">✉️</div>
+                <h3>ელ.ფოსტა</h3>
+                <p>ზოგადი: <a href="mailto:info@madmen.ge">info@madmen.ge</a></p>
+                <p>დაჯავშნა: <a href="mailto:booking@madmen.ge">booking@madmen.ge</a></p>
+                <p>კარიერა: <a href="mailto:career@madmen.ge">career@madmen.ge</a></p>
+            </div>
+            
+            <!-- Working Hours -->
+            <div class="info-card">
+                <div class="info-icon">🕐</div>
+                <h3>სამუშაო საათები</h3>
+                <div class="hours-list">
+                    <div class="hours-row">
+                        <span class="day">ორშაბათი - პარასკევი</span>
+                        <span class="time">10:00 - 20:00</span>
+                    </div>
+                    <div class="hours-row">
+                        <span class="day">შაბათი</span>
+                        <span class="time">10:00 - 20:00</span>
+                    </div>
+                    <div class="hours-row">
+                        <span class="day">კვირა</span>
+                        <span class="time">12:00 - 18:00</span>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <!-- Google Maps Section -->
+    <div class="map-section">
+        <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2976.4425287193847!2d44.815800476547394!3d41.794379567922855!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40446d8d6aeafce7%3A0x14e3c42a731ef168!2sBarbershop%20MAD%20MEN!5e0!3m2!1sen!2sge!4v1703087654321!5m2!1sen!2sge" 
+            allowfullscreen="" 
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+    </div>
+    
+    <!-- Google Reviews Section -->
+    <!-- 
+    INSTRUCTIONS: To display REAL Google Reviews from your business:
+    
+    Option 1: Google Reviews Badge (Official & Free)
+    1. Go to: https://www.google.com/maps/place/Barbershop+MAD+MEN/@41.7943795,44.8179901
+    2. Click "Share" → "Embed a map" 
+    3. Copy the iframe code and replace the reviews-grid div below
+    
+    Option 2: Google Places API (Dynamic reviews)
+    1. Get API key from Google Cloud Console
+    2. Enable Places API
+    3. Your Place ID: ChIJ588tjY1tRkARaOEec0rE4xQ
+    4. Use JavaScript to fetch reviews dynamically
+    
+    Option 3: Third-party Widget (Easiest)
+    - Elfsight: https://elfsight.com/google-reviews-widget/
+    - Kudobuzz: https://www.kudobuzz.com/
+    - EmbedSocial: https://embedsocial.com/products/reviews/
+    
+    For now, showing sample reviews in MAD-MEN style.
+    Replace this section with actual widget embed code.
+    -->
+    <div class="reviews-section">
+        <div class="reviews-header">
+            <h2 class="reviews-title">⭐ რას ამბობენ ჩვენი კლიენტები</h2>
+            <p class="reviews-subtitle">ნახეთ რეალური შეფასებები Google-იდან</p>
+            <p style="margin-top: 15px;">
+                <a href="https://www.google.com/maps/place/Barbershop+MAD+MEN/@41.7943795,44.8179901,17z/data=!3m1!4b1!4m6!3m5!1s0x40446d8d6aeafce7:0x14e3c42a731ef168!8m2!3d41.7943795!4d44.8179901" 
+                   target="_blank" 
+                   style="color: #B07D4A; text-decoration: none; font-weight: 600; font-size: 16px;">
+                    📍 ყველა რევიუს ნახვა Google Maps-ზე →
+                </a>
+            </p>
+        </div>
+        
+        <!-- Sample reviews styled like Google reviews - Replace with actual widget -->
+        <div class="reviews-grid">
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-avatar">
+                        <img src="https://lh3.googleusercontent.com/a/default-user" alt="User" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                    </div>
+                    <div class="reviewer-info">
+                        <div class="reviewer-name">Google კლიენტი</div>
+                        <div class="review-stars">★★★★★</div>
+                        <div class="review-date">Google Reviews</div>
+                    </div>
+                </div>
+                <p class="review-text">
+                    საუკეთესო ბარბერშოპი თბილისში! პროფესიონალი გუნდი და შესანიშნავი ატმოსფერო. ყოველთვის კმაყოფილი ვრჩები ვიზიტის შემდეგ.
+                </p>
+                <span class="review-source">
+                    <span>📍</span>
+                    <span>Google Reviews</span>
+                </span>
+            </div>
+            
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-avatar">
+                        <img src="https://lh3.googleusercontent.com/a/default-user" alt="User" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                    </div>
+                    <div class="reviewer-info">
+                        <div class="reviewer-name">Google კლიენტი</div>
+                        <div class="review-stars">★★★★★</div>
+                        <div class="review-date">Google Reviews</div>
+                    </div>
+                </div>
+                <p class="review-text">
+                    ძალიან კმაყოფილი ვარ სერვისით! უზუსტესი შეჭრა და მოსახერხებელი დაჯავშნის სისტემა. ძალიან რეკომენდირებულია!
+                </p>
+                <span class="review-source">
+                    <span>📍</span>
+                    <span>Google Reviews</span>
+                </span>
+            </div>
+            
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-avatar">
+                        <img src="https://lh3.googleusercontent.com/a/default-user" alt="User" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                    </div>
+                    <div class="reviewer-info">
+                        <div class="reviewer-name">Google კლიენტი</div>
+                        <div class="review-stars">★★★★★</div>
+                        <div class="review-date">Google Reviews</div>
+                    </div>
+                </div>
+                <p class="review-text">
+                    2 წელია MAD-MEN-ს ვსარგებლობ და ყოველთვის იდეალურია! პროფესიონალები და პრემიუმ პროდუქტები. ღირს თავისი ფასი!
+                </p>
+                <span class="review-source">
+                    <span>📍</span>
+                    <span>Google Reviews</span>
+                </span>
+            </div>
+        </div>
+        
+        <!-- Alternative: Simple Google Reviews Button -->
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="https://www.google.com/maps/place/Barbershop+MAD+MEN/@41.7943795,44.8179901,17z/data=!4m8!3m7!1s0x40446d8d6aeafce7:0x14e3c42a731ef168!8m2!3d41.7943795!4d44.8179901!9m1!1b1!16s%2Fg%2F11shbyszyq" 
+               target="_blank"
+               style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #B07D4A, #C724B1); color: #ffffff; border-radius: 30px; text-decoration: none; font-weight: 700; font-size: 16px; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(183, 125, 74, 0.3);">
+                ⭐ ყველა Google Reviews-ის ნახვა
+            </a>
+        </div>
+    </div>
+    
+    <!-- Social Section -->
+    <div class="social-section">
+        <h2 class="social-title">გამოგვყევით სოციალურ მედიაში</h2>
+        <p class="social-subtitle">იყავით კურსში ახალი სტილების, აქციების და სიახლეების შესახებ</p>
+        
+        <div class="social-links">
+            <a href="https://facebook.com/madmen" target="_blank" class="social-link" title="Facebook">
+                📘
+            </a>
+            <a href="https://instagram.com/madmen" target="_blank" class="social-link" title="Instagram">
+                📸
+            </a>
+            <a href="https://tiktok.com/@madmen" target="_blank" class="social-link" title="TikTok">
+                🎵
+            </a>
+            <a href="https://youtube.com/@madmen" target="_blank" class="social-link" title="YouTube">
+                📹
+            </a>
+            <a href="https://linkedin.com/company/madmen" target="_blank" class="social-link" title="LinkedIn">
+                💼
+            </a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

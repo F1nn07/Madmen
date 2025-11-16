@@ -1,0 +1,298 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{{ 'რედაქტირება' if service else 'ახალი სერვისი' }}{% endblock %}
+{% block page_title %}{{ 'სერვისის რედაქტირება' if service else 'ახალი სერვისის შექმნა' }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .form-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 30px;
+    }
+
+    .form-header {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-header h2 {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .form-header p {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-label.required::after {
+        content: '*';
+        color: var(--danger);
+        margin-left: 4px;
+    }
+
+    .form-input,
+    .form-textarea {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-gold);
+        background: rgba(176, 125, 74, 0.05);
+        box-shadow: 0 0 0 4px rgba(176, 125, 74, 0.1);
+    }
+
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .form-input::placeholder,
+    .form-textarea::placeholder {
+        color: var(--text-secondary);
+        opacity: 0.5;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .input-hint {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 6px;
+    }
+
+    .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .checkbox-wrapper:hover {
+        background: rgba(176, 125, 74, 0.05);
+        border-color: var(--primary-gold);
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--primary-gold);
+        cursor: pointer;
+    }
+
+    .checkbox-label {
+        flex: 1;
+        cursor: pointer;
+    }
+
+    .checkbox-label-title {
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 3px;
+    }
+
+    .checkbox-label-desc {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: flex-end;
+        padding-top: 20px;
+        margin-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(176, 125, 74, 0.4);
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--primary-gold);
+        color: var(--primary-gold);
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <form method="POST" action="{{ url_for('admin.service_edit', id=service.id) if service else url_for('admin.service_create') }}">
+        <div class="form-card">
+            <div class="form-header">
+                <h2>{{ 'სერვისის რედაქტირება' if service else 'ახალი სერვისის შექმნა' }}</h2>
+                <p>შეავსეთ ყველა აუცილებელი ველი</p>
+            </div>
+
+            <div class="form-group">
+                <label for="name" class="form-label required">სერვისის დასახელება</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    class="form-input"
+                    value="{{ service.name if service else '' }}"
+                    placeholder="მაგ: კლასიკური თმის შეჭრა"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="form-label">აღწერა</label>
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    class="form-textarea"
+                    placeholder="დეტალური აღწერა სერვისის შესახებ..."
+                >{{ service.description if service else '' }}</textarea>
+                <span class="input-hint">რა მოიცავს ეს სერვისი და რატომ უნდა აირჩიოს კლიენტმა</span>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="price" class="form-label required">ფასი (₾)</label>
+                    <input 
+                        type="number" 
+                        id="price" 
+                        name="price" 
+                        class="form-input"
+                        value="{{ service.price if service else '' }}"
+                        placeholder="მაგ: 50"
+                        step="0.01"
+                        min="0"
+                        required
+                    >
+                    <span class="input-hint">ფასი ლარებში</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="duration" class="form-label required">ხანგრძლივობა (წუთები)</label>
+                    <input 
+                        type="number" 
+                        id="duration" 
+                        name="duration" 
+                        class="form-input"
+                        value="{{ service.duration if service else '' }}"
+                        placeholder="მაგ: 30"
+                        min="5"
+                        step="5"
+                        required
+                    >
+                    <span class="input-hint">ჯავშნისთვის საჭირო დრო</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-wrapper">
+                    <input 
+                        type="checkbox" 
+                        id="is_active" 
+                        name="is_active"
+                        {% if not service or service.is_active %}checked{% endif %}
+                    >
+                    <label for="is_active" class="checkbox-label">
+                        <div class="checkbox-label-title">აქტიური სერვისი</div>
+                        <div class="checkbox-label-desc">მხოლოდ აქტიური სერვისები ჩანან ჯავშნის გვერდზე</div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin.services') }}" class="btn btn-secondary">
+                    <span>←</span>
+                    <span>გაუქმება</span>
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <span>💾</span>
+                    <span>{{ 'განახლება' if service else 'შენახვა' }}</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

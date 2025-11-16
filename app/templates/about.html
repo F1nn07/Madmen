@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}ჩვენს შესახებ - BarberFlow{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-bold text-gray-800 mb-8 text-center">ჩვენს შესახებ</h1>
+    
+    <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+        <p class="text-lg text-gray-700 leading-relaxed mb-4">
+            BarberFlow არის თანამედროვე ბარბერშოპის მართვისა და ჯავშნების სისტემა, 
+            რომელიც შექმნილია რომ გაგიმარტივოთ ვიზიტების დაგეგმვა და მართვა.
+        </p>
+        <p class="text-lg text-gray-700 leading-relaxed">
+            ჩვენი მისიაა მივაწოდოთ კლიენტებს უმაღლესი ხარისხის მომსახურება 
+            კომფორტულ და თანამედროვე გარემოში.
+        </p>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <i class="fas fa-award text-primary text-4xl mb-4"></i>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">გამოცდილება</h3>
+            <p class="text-gray-600">10+ წლიანი გამოცდილება</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <i class="fas fa-users text-primary text-4xl mb-4"></i>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">კლიენტები</h3>
+            <p class="text-gray-600">1000+ კმაყოფილი კლიენტი</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 text-center">
+            <i class="fas fa-star text-primary text-4xl mb-4"></i>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">რეიტინგი</h3>
+            <p class="text-gray-600">4.9/5 საშუალო შეფასება</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

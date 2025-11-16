@@ -1,0 +1,679 @@
+{% extends "base.html" %}
+
+{% block title %}სერვისები - MAD-MEN Barbershop{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Page Header */
+    .page-header {
+        padding: 150px 30px 80px;
+        text-align: center;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::before {
+        content: '';
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(183, 125, 74, 0.1) 0%, transparent 70%);
+        top: -100px;
+        right: 10%;
+        animation: pulse 6s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 0.8; }
+    }
+    
+    .page-header-content {
+        max-width: 800px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .page-badge {
+        display: inline-block;
+        background: rgba(199, 36, 177, 0.1);
+        border: 1px solid #C724B1;
+        padding: 8px 20px;
+        border-radius: 20px;
+        color: #C724B1;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    .page-header h1 {
+        font-size: 56px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #ffffff, #B07D4A);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .page-header p {
+        font-size: 18px;
+        color: #999;
+        line-height: 1.6;
+    }
+    
+    /* Services Container */
+    .services-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 80px 30px;
+    }
+    
+    /* Service Category */
+    .service-category {
+        margin-bottom: 80px;
+    }
+    
+    .category-header {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+    
+    .category-title {
+        font-size: 38px;
+        font-weight: 700;
+        color: #B07D4A;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .category-title::before,
+    .category-title::after {
+        content: '';
+        width: 80px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #B07D4A);
+    }
+    
+    .category-title::after {
+        background: linear-gradient(90deg, #B07D4A, transparent);
+    }
+    
+    .category-description {
+        color: #999;
+        font-size: 16px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    /* Service Items */
+    .service-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+    }
+    
+    .service-item {
+        background: #1a1a1a;
+        border: 1px solid rgba(183, 125, 74, 0.2);
+        border-radius: 20px;
+        padding: 35px;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .service-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #B07D4A, #C724B1);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+    }
+    
+    .service-item:hover {
+        transform: translateY(-8px);
+        border-color: #B07D4A;
+        box-shadow: 0 15px 40px rgba(183, 125, 74, 0.3);
+    }
+    
+    .service-item:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .service-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+    
+    .service-info {
+        flex: 1;
+    }
+    
+    .service-icon {
+        font-size: 42px;
+        margin-bottom: 15px;
+        display: inline-block;
+        transition: transform 0.3s ease;
+    }
+    
+    .service-item:hover .service-icon {
+        transform: scale(1.15) rotate(5deg);
+    }
+    
+    .service-name {
+        font-size: 24px;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 12px;
+    }
+    
+    .service-description {
+        color: #999;
+        line-height: 1.6;
+        margin-bottom: 20px;
+        font-size: 15px;
+    }
+    
+    .service-features {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+    
+    .feature-tag {
+        background: rgba(199, 36, 177, 0.1);
+        border: 1px solid rgba(199, 36, 177, 0.3);
+        padding: 6px 14px;
+        border-radius: 15px;
+        font-size: 13px;
+        color: #C724B1;
+        font-weight: 500;
+    }
+    
+    .service-pricing {
+        background: rgba(183, 125, 74, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .price-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .price-label {
+        color: #999;
+        font-size: 14px;
+    }
+    
+    .price-value {
+        font-size: 26px;
+        font-weight: 700;
+        color: #B07D4A;
+    }
+    
+    .price-duration {
+        font-size: 14px;
+        color: #666;
+        font-weight: 400;
+    }
+    
+    .btn-book {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        color: #ffffff;
+        text-align: center;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-book:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(183, 125, 74, 0.4);
+    }
+    
+    /* Popular Badge */
+    .popular-badge {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #C724B1, #B07D4A);
+        color: #ffffff;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 15px rgba(199, 36, 177, 0.3);
+    }
+    
+    /* Info Section */
+    .info-section {
+        background: #1a1a1a;
+        border-radius: 20px;
+        padding: 60px 40px;
+        margin: 80px auto;
+        max-width: 1200px;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 40px;
+        text-align: center;
+    }
+    
+    .info-item {
+        padding: 20px;
+    }
+    
+    .info-icon {
+        font-size: 48px;
+        margin-bottom: 20px;
+    }
+    
+    .info-item h3 {
+        font-size: 20px;
+        color: #B07D4A;
+        margin-bottom: 12px;
+    }
+    
+    .info-item p {
+        color: #999;
+        line-height: 1.6;
+        font-size: 15px;
+    }
+    
+    /* CTA Box */
+    .cta-box {
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        border-radius: 25px;
+        padding: 60px 40px;
+        text-align: center;
+        margin: 80px auto;
+        max-width: 900px;
+    }
+    
+    .cta-box h2 {
+        font-size: 36px;
+        color: #ffffff;
+        margin-bottom: 15px;
+    }
+    
+    .cta-box p {
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 30px;
+    }
+    
+    .btn-cta-white {
+        display: inline-block;
+        padding: 16px 40px;
+        background: #ffffff;
+        color: #B07D4A;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-cta-white:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .page-header h1 {
+            font-size: 38px;
+        }
+        
+        .category-title {
+            font-size: 28px;
+        }
+        
+        .category-title::before,
+        .category-title::after {
+            width: 40px;
+        }
+        
+        .service-items {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<section class="page-header">
+    <div class="page-header-content">
+        <div class="page-badge">✨ ჩვენი სერვისები</div>
+        <h1>პროფესიონალური სერვისები</h1>
+        <p>MAD-MEN-ში ჩვენ გთავაზობთ ფართო სპექტრის სერვისებს - კლასიკური თმის შეჭრიდან თანამედროვე სტაილებამდე. ყველა სერვისი შესრულებულია პროფესიონალი ბარბერების მიერ.</p>
+    </div>
+</section>
+
+<div class="services-container">
+    
+    <!-- Premium Services -->
+    <div class="service-category">
+        <div class="category-header">
+            <h2 class="category-title">💎 პრემიუმ სერვისები</h2>
+            <p class="category-description">ჩვენი ყველაზე პოპულარული და სრული სერვისები</p>
+        </div>
+        
+        <div class="service-items">
+            <div class="service-item">
+                <span class="popular-badge">🔥 ყველაზე პოპულარული</span>
+                <div class="service-header-row">
+                    <div class="service-info">
+                        <div class="service-icon">💈</div>
+                        <h3 class="service-name">სრული VIP პაკეტი</h3>
+                    </div>
+                </div>
+                <p class="service-description">სრულყოფილი გამოცდილება: პროფესიონალური თმის შეჭრა, წვერის დეტალური მოვლა, სახის მასაჟი ცხელი პირსახოცით და სტაილინგი პრემიუმ პროდუქტებით.</p>
+                <div class="service-features">
+                    <span class="feature-tag">თმის შეჭრა</span>
+                    <span class="feature-tag">წვერის მოვლა</span>
+                    <span class="feature-tag">ფეის მასაჟი</span>
+                    <span class="feature-tag">სტაილინგი</span>
+                </div>
+                <div class="service-pricing">
+                    <div class="price-row">
+                        <span class="price-label">ფასი</span>
+                        <div>
+                            <span class="price-value">70₾</span>
+                            <span class="price-duration">/ 90 წთ</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
+            </div>
+            
+            <div class="service-item">
+                <div class="service-header-row">
+                    <div class="service-info">
+                        <div class="service-icon">✂️</div>
+                        <h3 class="service-name">VIP თმის შეჭრა</h3>
+                    </div>
+                </div>
+                <p class="service-description">პრემიუმ კლასის თმის შეჭრა გამოცდილი მასტერის მიერ. მოიცავს კონსულტაციას, თმის დამუშავებას და პროფესიონალურ სტაილინგს.</p>
+                <div class="service-features">
+                    <span class="feature-tag">კონსულტაცია</span>
+                    <span class="feature-tag">თმის დამუშავება</span>
+                    <span class="feature-tag">სტაილინგი</span>
+                </div>
+                <div class="service-pricing">
+                    <div class="price-row">
+                        <span class="price-label">ფასი</span>
+                        <div>
+                            <span class="price-value">50₾</span>
+                            <span class="price-duration">/ 60 წთ</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
+            </div>
+            
+            <div class="service-item">
+                <div class="service-header-row">
+                    <div class="service-info">
+                        <div class="service-icon">🪒</div>
+                        <h3 class="service-name">ტრადიციული ბრიტვით გაპარსვა</h3>
+                    </div>
+                </div>
+                <p class="service-description">კლასიკური ტრადიციული გაპარსვა სტრეიტ რეზორით. მოიცავს ცხელი პირსახოცის მომზადებას, დაპარსვას და დამამშვიდებელ კრემს.</p>
+                <div class="service-features">
+                    <span class="feature-tag">ცხელი პირსახოცი</span>
+                    <span class="feature-tag">სტრეიტ რეზორი</span>
+                    <span class="feature-tag">პრემიუმ კრემი</span>
+                </div>
+                <div class="service-pricing">
+                    <div class="price-row">
+                        <span class="price-label">ფასი</span>
+                        <div>
+                            <span class="price-value">40₾</span>
+                            <span class="price-duration">/ 45 წთ</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Standard Services -->
+    <div class="service-category">
+        <div class="category-header">
+            <h2 class="category-title">✂️ სტანდარტული სერვისები</h2>
+            <p class="category-description">ხარისხიანი და ხელმისაწვდომი სერვისები ყოველდღიური მოვლისთვის</p>
+        </div>
+        
+        <div class="service-items">
+            <div class="service-item">
+                <div class="service-header-row">
+                    <div class="service-info">
+                        <div class="service-icon">✂️</div>
+                        <h3 class="service-name">კლასიკური თმის შეჭრა</h3>
+                    </div>
+                </div>
+                <p class="service-description">პროფესიონალური თმის შეჭრა სტანდარტული ტექნიკებით. იდეალურია რეგულარული მოვლისთვის.</p>
+                <div class="service-features">
+                    <span class="feature-tag">თმის შეჭრა</span>
+                    <span class="feature-tag">თმის გარეცხვა</span>
+                </div>
+                <div class="service-pricing">
+                    <div class="price-row">
+                        <span class="price-label">ფასი</span>
+                        <div>
+                            <span class="price-value">30₾</span>
+                            <span class="price-duration">/ 45 წთ</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
+            </div>
+            
+            <div class="service-item">
+                <div class="service-header-row">
+                    <div class="service-info">
+                        <div class="service-icon">🪒</div>
+                        <h3 class="service-name">წვერის მოვლა</h3>
+                    </div>
+                </div>
+                <p class="service-description">წვერის დახვეწა, ფორმირება და ტრიმინგი. შესანიშნავია თქვენი წვერის შენარჩუნებისთვის.</p>
+                <div class="service-features">
+                    <span class="feature-tag">ტრიმინგი</span>
+                    <span class="feature-tag">ფორმირება</span>
+                </div>
+                <div class="service-pricing">
+                    <div class="price-row">
+                        <span class="price-label">ფასი</span>
+                        <div>
+                            <span class="price-value">25₾</span>
+                            <span class="price-duration">/ 30 წთ</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
+            </div>
+            
+            <div class="service-item">
+                <div class="service-header-row">
+                    <div class="service-info">
+                        <div class="service-icon">👦</div>
+                        <h3 class="service-name">ბავშვის თმის შეჭრა</h3>
+                    </div>
+                </div>
+                <p class="service-description">12 წლამდე ასაკის ბავშვებისთვის სპეციალური მიდგომით და მოთმინებით.</p>
+                <div class="service-features">
+                    <span class="feature-tag">12 წლამდე</span>
+                    <span class="feature-tag">სპეციალური მიდგომა</span>
+                </div>
+                <div class="service-pricing">
+                    <div class="price-row">
+                        <span class="price-label">ფასი</span>
+                        <div>
+                            <span class="price-value">20₾</span>
+                            <span class="price-duration">/ 30 წთ</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Special Services -->
+    <div class="service-category">
+        <div class="category-header">
+            <h2 class="category-title">🎨 სპეციალური სერვისები</h2>
+            <p class="category-description">უნიკალური და კრეატიული სერვისები განსაკუთრებული სტილისთვის</p>
+        </div>
+        
+        <div class="service-items">
+            <div class="service-item">
+                <div class="service-header-row">
+                    <div class="service-info">
+                        <div class="service-icon">🎨</div>
+                        <h3 class="service-name">ჰეირ დიზაინი & ხაზები</h3>
+                    </div>
+                </div>
+                <p class="service-description">კრეატიული ხაზები და პატერნები თმაზე. განსაკუთრებული სტილისთვის და პერსონალიზაციისთვის.</p>
+                <div class="service-features">
+                    <span class="feature-tag">კრეატიული ხაზები</span>
+                    <span class="feature-tag">პატერნები</span>
+                    <span class="feature-tag">დიზაინი</span>
+                </div>
+                <div class="service-pricing">
+                    <div class="price-row">
+                        <span class="price-label">ფასი</span>
+                        <div>
+                            <span class="price-value">40₾</span>
+                            <span class="price-duration">/ 60 წთ</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
+            </div>
+            
+            <div class="service-item">
+                <div class="service-header-row">
+                    <div class="service-info">
+                        <div class="service-icon">✨</div>
+                        <h3 class="service-name">თმის მოვლა & მასკა</h3>
+                    </div>
+                </div>
+                <p class="service-description">სიღრმისეული თმის მოვლა სპეციალური მასკებით. აღადგენს და აძლიერებს თმას.</p>
+                <div class="service-features">
+                    <span class="feature-tag">მასკა</span>
+                    <span class="feature-tag">მოვლა</span>
+                    <span class="feature-tag">სტაილინგი</span>
+                </div>
+                <div class="service-pricing">
+                    <div class="price-row">
+                        <span class="price-label">ფასი</span>
+                        <div>
+                            <span class="price-value">35₾</span>
+                            <span class="price-duration">/ 45 წთ</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
+            </div>
+            
+            <div class="service-item">
+                <div class="service-header-row">
+                    <div class="service-info">
+                        <div class="service-icon">🎭</div>
+                        <h3 class="service-name">სახის მასაჟი</h3>
+                    </div>
+                </div>
+                <p class="service-description">დამამშვიდებელი სახის მასაჟი ცხელი პირსახოცით და პრემიუმ კოსმეტიკით.</p>
+                <div class="service-features">
+                    <span class="feature-tag">რელაქსაცია</span>
+                    <span class="feature-tag">ცხელი პირსახოცი</span>
+                </div>
+                <div class="service-pricing">
+                    <div class="price-row">
+                        <span class="price-label">ფასი</span>
+                        <div>
+                            <span class="price-value">30₾</span>
+                            <span class="price-duration">/ 30 წთ</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Info Section -->
+<section class="info-section">
+    <div class="info-grid">
+        <div class="info-item">
+            <div class="info-icon">🏆</div>
+            <h3>პრემიუმ პროდუქტები</h3>
+            <p>ვიყენებთ მხოლოდ საუკეთესო ბრენდების პროდუქტებს - American Crew, Reuzel, Uppercut</p>
+        </div>
+        <div class="info-item">
+            <div class="info-icon">⚡</div>
+            <h3>სწრაფი მომსახურება</h3>
+            <p>პუნქტუალურობა ჩვენი პრიორიტეტია - შენი დრო ფასეულია</p>
+        </div>
+        <div class="info-item">
+            <div class="info-icon">💯</div>
+            <h3>გარანტია</h3>
+            <p>თუ არ დარჩი კმაყოფილი, უფასოდ გავასწორებთ</p>
+        </div>
+        <div class="info-item">
+            <div class="info-icon">🎁</div>
+            <h3>ლოიალობის პროგრამა</h3>
+            <p>თითოეული მე-5 ვიზიტი სრულიად უფასოა</p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<div class="services-container">
+    <div class="cta-box">
+        <h2>მზად ხარ ახალი იმიჯისთვის?</h2>
+        <p>დაჯავშნე შენი ვიზიტი ონლაინ და მიიღე 10% ფასდაკლება პირველ ვიზიტზე!</p>
+        <a href="/booking" class="btn-cta-white">დაჯავშნა ახლავე →</a>
+    </div>
+</div>
+
+{% endblock %}

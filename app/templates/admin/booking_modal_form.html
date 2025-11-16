@@ -1,0 +1,261 @@
+<!-- Modal Form Fragment (loaded via AJAX) -->
+<form id="bookingForm" method="POST" class="space-y-4">
+    {{ form.hidden_tag() }}
+    
+    <!-- Client Information Section -->
+    <div class="form-section">
+        <h4 class="section-title">კლიენტის ინფორმაცია</h4>
+        
+        <div class="form-group">
+            <label class="form-label required">{{ form.client_name.label.text }}</label>
+            {{ form.client_name(class="form-input", placeholder="მაგ: გიორგი გელაშვილი") }}
+            <span class="form-error" id="error-client_name"></span>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label required">{{ form.client_phone.label.text }}</label>
+                {{ form.client_phone(class="form-input", placeholder="+995 XXX XX XX XX") }}
+                <span class="form-error" id="error-client_phone"></span>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">{{ form.client_email.label.text }}</label>
+                {{ form.client_email(class="form-input", placeholder="email@example.com") }}
+                <span class="form-error" id="error-client_email"></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Booking Details Section -->
+    <div class="form-section">
+        <h4 class="section-title">ჯავშნის დეტალები</h4>
+        
+        <div class="form-group">
+            <label class="form-label required">{{ form.service_id.label.text }}</label>
+            {{ form.service_id(class="form-select") }}
+            <span class="form-error" id="error-service_id"></span>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label required">{{ form.barber_id.label.text }}</label>
+            {{ form.barber_id(class="form-select") }}
+            <span class="form-error" id="error-barber_id"></span>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label required">{{ form.booking_date.label.text }}</label>
+                {{ form.booking_date(class="form-input") }}
+                <span class="form-error" id="error-booking_date"></span>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label required">{{ form.booking_time.label.text }}</label>
+                {{ form.booking_time(class="form-input") }}
+                <span class="form-error" id="error-booking_time"></span>
+            </div>
+        </div>
+        
+        {% if mode == 'edit' %}
+        <div class="form-group">
+            <label class="form-label">{{ form.status.label.text }}</label>
+            {{ form.status(class="form-select") }}
+        </div>
+        {% endif %}
+        
+        <div class="form-group">
+            <label class="form-label">{{ form.notes.label.text }}</label>
+            {{ form.notes(class="form-textarea", rows="3", placeholder="დამატებითი ინფორმაცია...") }}
+            <span class="form-error" id="error-notes"></span>
+        </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <button type="submit" class="btn-submit">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>{{ 'განახლება' if mode == 'edit' else 'შენახვა' }}</span>
+        </button>
+        
+        {% if mode == 'edit' and booking %}
+        <button type="button" class="btn-delete" onclick="deleteBooking({{ booking.id }})">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            <span>წაშლა</span>
+        </button>
+        {% endif %}
+        
+        <button type="button" class="btn-cancel" onclick="closeBookingModal()">
+            გაუქმება
+        </button>
+    </div>
+</form>
+
+<style>
+    .form-section {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .section-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border-color);
+    }
+    
+    .form-group {
+        margin-bottom: 16px;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+    
+    .form-label.required::after {
+        content: ' *';
+        color: #ef4444;
+    }
+    
+    .form-input,
+    .form-select,
+    .form-textarea {
+        width: 100%;
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-gold);
+        background: rgba(176, 125, 74, 0.1);
+        box-shadow: 0 0 0 3px rgba(176, 125, 74, 0.1);
+    }
+    
+    .form-select {
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23999'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 20px;
+        padding-right: 40px;
+    }
+    
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .form-error {
+        display: block;
+        font-size: 12px;
+        color: #ef4444;
+        margin-top: 4px;
+        min-height: 18px;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 2px solid var(--border-color);
+    }
+    
+    .btn-submit {
+        flex: 1;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(176, 125, 74, 0.4);
+    }
+    
+    .btn-delete {
+        padding: 12px 24px;
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        border: 1px solid #ef4444;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-delete:hover {
+        background: rgba(239, 68, 68, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    .btn-cancel {
+        padding: 12px 24px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--text-primary);
+        color: var(--text-primary);
+    }
+    
+    @media (max-width: 640px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>

@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}ჯავშანი დადასტურებულია - MAD-MEN{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-container {
+        max-width: 800px;
+        margin: 100px auto 50px;
+        padding: 0 20px;
+        text-align: center;
+    }
+
+    .success-icon {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 30px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 60px;
+        animation: scaleIn 0.5s ease;
+    }
+
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    .success-title {
+        font-family: 'Slab Serif', serif;
+        font-size: 42px;
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 15px;
+    }
+
+    .success-message {
+        font-size: 18px;
+        color: #888;
+        margin-bottom: 40px;
+    }
+
+    .booking-details {
+        background: #1a1a1a;
+        border: 2px solid #333;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: left;
+        margin-bottom: 30px;
+    }
+
+    .confirmation-code {
+        text-align: center;
+        padding: 20px;
+        background: linear-gradient(135deg, rgba(176, 125, 74, 0.1), rgba(199, 36, 177, 0.1));
+        border: 2px solid #B07D4A;
+        border-radius: 12px;
+        margin-bottom: 30px;
+    }
+
+    .code-label {
+        font-size: 14px;
+        color: #888;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .code-value {
+        font-size: 32px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 2px;
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #333;
+    }
+
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-size: 14px;
+        color: #888;
+    }
+
+    .detail-value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #fff;
+    }
+
+    .actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(176, 125, 74, 0.5);
+    }
+
+    .btn-secondary {
+        background: #2a2a2a;
+        color: #888;
+        border: 1px solid #333;
+    }
+
+    .btn-secondary:hover {
+        background: #333;
+        color: #fff;
+    }
+
+    .info-box {
+        background: rgba(59, 130, 246, 0.1);
+        border: 1px solid #3b82f6;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 30px;
+        text-align: left;
+    }
+
+    .info-box h4 {
+        color: #3b82f6;
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .info-box p {
+        color: #888;
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 10px;
+    }
+
+    .info-box p:last-child {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <div class="success-icon">✓</div>
+    
+    <h1 class="success-title">ჯავშანი დადასტურებულია!</h1>
+    <p class="success-message">თქვენი ჯავშანი წარმატებით შეიქმნა. ველოდებით თქვენ დანიშნულ დროს!</p>
+    
+    <div class="confirmation-code">
+        <div class="code-label">დადასტურების კოდი</div>
+        <div class="code-value">{{ booking.confirmation_code }}</div>
+    </div>
+    
+    <div class="booking-details">
+        <div class="detail-item">
+            <span class="detail-label">სერვისი</span>
+            <span class="detail-value">{{ booking.service.name }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">ბარბერი</span>
+            <span class="detail-value">
+                {% if booking.barber %}
+                    {{ booking.barber.name }}
+                {% else %}
+                    ნებისმიერი ხელმისაწვდომი
+                {% endif %}
+            </span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">თარიღი</span>
+            <span class="detail-value">
+                {% if booking.start_time %}
+                    {{ booking.start_time.strftime('%d %B, %Y') }}
+                {% else %}
+                    {{ booking.date.strftime('%d %B, %Y') }}
+                {% endif %}
+            </span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">დრო</span>
+            <span class="detail-value">
+                {% if booking.start_time %}
+                    {{ booking.start_time.strftime('%H:%M') }} - {{ booking.end_time.strftime('%H:%M') }}
+                {% else %}
+                    {{ booking.time.strftime('%H:%M') }}
+                {% endif %}
+            </span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">ფასი</span>
+            <span class="detail-value">{{ booking.service.price }}₾</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">სახელი</span>
+            <span class="detail-value">{{ booking.customer_name or booking.client_name }}</span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">ტელეფონი</span>
+            <span class="detail-value">{{ booking.customer_phone or booking.client_phone }}</span>
+        </div>
+        {% if booking.customer_email or booking.client_email %}
+        <div class="detail-item">
+            <span class="detail-label">ელ. ფოსტა</span>
+            <span class="detail-value">{{ booking.customer_email or booking.client_email }}</span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="actions">
+        <a href="/" class="btn btn-primary">მთავარ გვერდზე</a>
+        <a href="/booking" class="btn btn-secondary">ახალი ჯავშანი</a>
+    </div>
+    
+    <div class="info-box">
+        <h4>📍 ჩვენი მისამართი</h4>
+        <p>თბილისი, ილია ვეკუას ქუჩა 16</p>
+        <h4 style="margin-top: 15px;">📞 კონტაქტი</h4>
+        <p>+995 555 123 456</p>
+        <h4 style="margin-top: 15px;">ℹ️ გთხოვთ გაითვალისწინოთ</h4>
+        <p>გთხოვთ მობრძანდეთ დანიშნულ დროზე 5 წუთით ადრე. ჯავშნის გაუქმების შემთხვევაში გთხოვთ დაგვიკავშირდეთ მინიმუმ 2 საათით ადრე.</p>
+    </div>
+</div>
+{% endblock %}

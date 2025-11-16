@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ჯავშნის დადასტურება</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f5f5f5;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                
+                <!-- Main Container - ზომა გაზრდილია 480px → 550px -->
+                <table width="550" cellpadding="0" cellspacing="0" style="background-color: #1a1a1a; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+                    
+                    <!-- Header with MAD-MEN Logo -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); padding: 20px 20px; text-align: center; border-bottom: 3px solid #B07D4A;">
+                            <!-- ლოგო უფრო პატარა: 250px → 180px -->
+                            <img src="https://i.imgur.com/3jzTFls.png" alt="MAD-MEN Barbershop" style="max-width: 180px; height: auto; display: block; margin: 0 auto; pointer-events: none; -webkit-user-select: none; user-select: none;" />
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 25px; background-color: #1a1a1a;">
+                            
+                            <p style="color: #e0e0e0; font-size: 15px; margin: 0 0 18px 0;">
+                                გამარჯობა <strong style="color: #B07D4A;">{{ booking.client_name }}</strong>,
+                            </p>
+                            
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 22px;">
+                                <tr>
+                                    <td style="background: linear-gradient(135deg, #2a2a2a 0%, #252525 100%); border-left: 4px solid #B07D4A; padding: 18px; border-radius: 6px; text-align: center;">
+                                        <div style="font-size: 36px; margin-bottom: 10px;">✓</div>
+                                        <p style="margin: 0; color: #B07D4A; font-weight: 600; font-size: 15px;">ჯავშანი დადასტურებულია</p>
+                                        <span style="display: inline-block; background: linear-gradient(135deg, #B07D4A, #8a5d2f); color: #1a1a1a; padding: 5px 14px; border-radius: 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-top: 10px;">Confirmed</span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <div style="height: 1px; background: linear-gradient(90deg, transparent, #B07D4A, transparent); margin: 18px 0;"></div>
+                            
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #2a2a2a 0%, #252525 100%); border-radius: 6px; padding: 18px; margin: 18px 0; border: 1px solid #333;">
+                                <tr>
+                                    <td>
+                                        <h2 style="color: #B07D4A; margin: 0 0 14px 0; font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #B07D4A; padding-bottom: 10px;">ჯავშნის დეტალები</h2>
+                                        
+                                        <table width="100%" cellpadding="8" cellspacing="0">
+                                            <tr style="border-bottom: 1px solid #333;">
+                                                <td style="color: #999; font-size: 12px;">ID</td>
+                                                <td style="color: #e0e0e0; font-size: 13px; font-weight: 600; text-align: right;">#{{ '%04d'|format(booking.id) }}</td>
+                                            </tr>
+                                            <tr style="border-bottom: 1px solid #333;">
+                                                <td style="color: #999; font-size: 12px;">მომსახურება</td>
+                                                <td style="color: #e0e0e0; font-size: 13px; font-weight: 600; text-align: right;">{{ booking.service.name }}</td>
+                                            </tr>
+                                            <tr style="border-bottom: 1px solid #333;">
+                                                <td style="color: #999; font-size: 12px;">ბარბერი</td>
+                                                <td style="color: #e0e0e0; font-size: 13px; font-weight: 600; text-align: right;">{{ booking.barber.get_full_name() }}</td>
+                                            </tr>
+                                            <tr style="border-bottom: 1px solid #333;">
+                                                <td style="color: #999; font-size: 12px;">თარიღი</td>
+                                                <td style="color: #e0e0e0; font-size: 13px; font-weight: 600; text-align: right;">{{ booking.start_time.strftime('%d/%m/%Y') }}</td>
+                                            </tr>
+                                            <tr style="border-bottom: 1px solid #333;">
+                                                <td style="color: #999; font-size: 12px;">დრო</td>
+                                                <td style="color: #e0e0e0; font-size: 13px; font-weight: 600; text-align: right;">{{ booking.start_time.strftime('%H:%M') }}-{{ booking.end_time.strftime('%H:%M') }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2" style="padding-top: 12px;">
+                                                    <div style="height: 1px; background: linear-gradient(90deg, transparent, #B07D4A, transparent);"></div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: #999; font-size: 12px; padding-top: 12px;">ფასი</td>
+                                                <td style="color: #B07D4A; font-size: 22px; font-weight: 700; text-align: right; padding-top: 12px;">{{ booking.service.price }}₾</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 18px 0;">
+                                <tr>
+                                    <td style="background: linear-gradient(135deg, #2a2a2a 0%, #252525 100%); border-left: 4px solid #B07D4A; padding: 14px; border-radius: 6px;">
+                                        <h3 style="color: #B07D4A; margin: 0 0 10px 0; font-size: 14px; font-weight: 700; text-transform: uppercase;">⚠️ მნიშვნელოვანი</h3>
+                                        <ul style="margin: 0; padding-left: 20px; color: #e0e0e0; font-size: 12px; line-height: 1.6;">
+                                            <li style="margin: 5px 0;">მობრძანდით <strong style="color: #B07D4A;">5 წუთით ადრე</strong></li>
+                                            <li style="margin: 5px 0;">გაუქმება: <strong style="color: #B07D4A;">24 საათით ადრე</strong></li>
+                                            <li style="margin: 5px 0;">დაგვიანების შემთხვევაში დაგვიკავშირდით</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 18px 0;">
+                                <tr>
+                                    <td style="background: linear-gradient(135deg, #2a2a2a 0%, #252525 100%); padding: 16px; border-radius: 6px; text-align: center; border: 1px solid #333;">
+                                        <p style="color: #B07D4A; font-size: 14px; font-weight: 700; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px;">კონტაქტი</p>
+                                        <p style="color: #999; font-size: 13px; margin: 5px 0;">
+                                            📞 <a href="tel:+995555123456" style="color: #B07D4A; text-decoration: none; font-weight: 600;">+995 555 123 456</a>
+                                        </p>
+                                        <p style="color: #999; font-size: 13px; margin: 5px 0;">
+                                            📧 <a href="mailto:info@madmen.ge" style="color: #B07D4A; text-decoration: none; font-weight: 600;">info@madmen.ge</a>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="text-align: center; color: #B07D4A; margin-top: 18px; font-weight: 600; font-size: 13px;">
+                                გნახავთ MAD-MEN-ში! ✂️
+                            </p>
+                            
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #0a0a0a; padding: 18px; text-align: center; border-top: 1px solid #2a2a2a;">
+                            <!-- ლოგო უფრო პატარა: 120px → 90px -->
+                            <img src="https://i.imgur.com/3jzTFls.png" alt="MAD-MEN" style="max-width: 90px; height: auto; display: block; margin: 0 auto 10px; opacity: 0.7; pointer-events: none; -webkit-user-select: none; user-select: none;" />
+                            <p style="color: #666; font-size: 11px; margin: 5px 0;">&copy; 2025 MAD-MEN Barbershop</p>
+                            <p style="color: #666; font-size: 11px; margin: 5px 0;">
+                                <a href="http://localhost:5001" style="color: #B07D4A; text-decoration: none; font-weight: 600;">madmen.ge</a>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+                
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

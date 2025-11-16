@@ -1,0 +1,760 @@
+{% extends "base.html" %}
+
+{% block title %}MAD-MEN - თბილისის საუკეთესო Barbershop{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero {
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+    }
+    
+    .hero::before {
+        content: '';
+        position: absolute;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(183, 125, 74, 0.1) 0%, transparent 70%);
+        top: -200px;
+        right: -200px;
+        animation: pulse 8s ease-in-out infinite;
+    }
+    
+    .hero::after {
+        content: '';
+        position: absolute;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(199, 36, 177, 0.1) 0%, transparent 70%);
+        bottom: -150px;
+        left: -150px;
+        animation: pulse 6s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.2); opacity: 0.8; }
+    }
+    
+    .hero-content {
+        max-width: 800px;
+        padding: 0 30px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .hero-badge {
+        display: inline-block;
+        background: rgba(183, 125, 74, 0.1);
+        border: 1px solid #B07D4A;
+        padding: 8px 20px;
+        border-radius: 20px;
+        color: #B07D4A;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 30px;
+        animation: fadeInDown 0.8s ease-out;
+    }
+    
+    .hero h1 {
+        font-size: 72px;
+        font-weight: 700;
+        margin-bottom: 25px;
+        background: linear-gradient(135deg, #ffffff, #B07D4A);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: fadeInUp 1s ease-out;
+    }
+    
+    .hero p {
+        font-size: 20px;
+        color: #999;
+        margin-bottom: 40px;
+        line-height: 1.6;
+        animation: fadeInUp 1.2s ease-out;
+    }
+    
+    .hero-buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+        animation: fadeInUp 1.4s ease-out;
+    }
+    
+    .btn-hero {
+        padding: 16px 40px;
+        border-radius: 30px;
+        font-size: 16px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+    
+    .btn-hero-primary {
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        color: #ffffff;
+        box-shadow: 0 8px 30px rgba(183, 125, 74, 0.3);
+    }
+    
+    .btn-hero-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 40px rgba(183, 125, 74, 0.5);
+    }
+    
+    .btn-hero-secondary {
+        background: transparent;
+        color: #ffffff;
+        border: 2px solid #B07D4A;
+    }
+    
+    .btn-hero-secondary:hover {
+        background: rgba(183, 125, 74, 0.1);
+        transform: translateY(-3px);
+    }
+    
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Section Styles */
+    .section {
+        padding: 100px 30px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .section-header {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+    
+    .section-badge {
+        display: inline-block;
+        background: rgba(199, 36, 177, 0.1);
+        border: 1px solid #C724B1;
+        padding: 6px 18px;
+        border-radius: 20px;
+        color: #C724B1;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .section-title {
+        font-size: 48px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #ffffff, #C724B1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .section-subtitle {
+        font-size: 18px;
+        color: #999;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    /* Services Grid */
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+    }
+    
+    .service-card {
+        background: #1a1a1a;
+        border: 1px solid rgba(183, 125, 74, 0.2);
+        border-radius: 20px;
+        padding: 40px 30px;
+        text-align: center;
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .service-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #B07D4A, #C724B1);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+    }
+    
+    .service-card:hover {
+        transform: translateY(-10px);
+        border-color: #B07D4A;
+        box-shadow: 0 15px 40px rgba(183, 125, 74, 0.2);
+    }
+    
+    .service-card:hover::before {
+        transform: scaleX(1);
+    }
+    
+    .service-icon {
+        font-size: 50px;
+        margin-bottom: 25px;
+        display: inline-block;
+        transition: transform 0.3s ease;
+    }
+    
+    .service-card:hover .service-icon {
+        transform: scale(1.2) rotate(5deg);
+    }
+    
+    .service-card h3 {
+        font-size: 24px;
+        color: #B07D4A;
+        margin-bottom: 15px;
+    }
+    
+    .service-card p {
+        color: #999;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+    
+    .service-price {
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 20px;
+    }
+    
+    .service-price span {
+        font-size: 16px;
+        color: #666;
+    }
+    
+    .btn-service {
+        display: inline-block;
+        padding: 12px 30px;
+        background: rgba(183, 125, 74, 0.1);
+        color: #B07D4A;
+        border: 1px solid #B07D4A;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-service:hover {
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        color: #ffffff;
+        border-color: transparent;
+    }
+    
+    /* Features Section */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+        margin-top: 50px;
+    }
+    
+    .feature-card {
+        background: #1a1a1a;
+        border: 1px solid rgba(199, 36, 177, 0.2);
+        border-radius: 15px;
+        padding: 35px 25px;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        background: rgba(199, 36, 177, 0.05);
+        border-color: #C724B1;
+        transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+        font-size: 45px;
+        margin-bottom: 20px;
+    }
+    
+    .feature-card h3 {
+        font-size: 20px;
+        color: #C724B1;
+        margin-bottom: 12px;
+    }
+    
+    .feature-card p {
+        color: #999;
+        line-height: 1.6;
+        font-size: 15px;
+    }
+    
+    /* Stats Section */
+    .stats-section {
+        background: #1a1a1a;
+        border-radius: 20px;
+        padding: 60px 40px;
+        margin: 80px 0;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 40px;
+        text-align: center;
+    }
+    
+    .stat-item {
+        padding: 20px;
+    }
+    
+    .stat-number {
+        font-size: 48px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+    }
+    
+    .stat-label {
+        color: #999;
+        font-size: 16px;
+    }
+    
+    /* Reviews Section */
+    .reviews-section {
+        padding: 100px 30px;
+        background: linear-gradient(135deg, rgba(10, 10, 10, 0.8), rgba(26, 26, 26, 0.8));
+    }
+    
+    .reviews-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .reviews-header {
+        text-align: center;
+        margin-bottom: 60px;
+    }
+    
+    .reviews-title {
+        font-size: 48px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #ffffff, #B07D4A);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .reviews-subtitle {
+        font-size: 18px;
+        color: #999;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .reviews-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 30px;
+    }
+    
+    .review-card {
+        background: #1a1a1a;
+        border: 1px solid rgba(183, 125, 74, 0.2);
+        border-radius: 20px;
+        padding: 35px;
+        transition: all 0.3s ease;
+    }
+    
+    .review-card:hover {
+        border-color: #B07D4A;
+        transform: translateY(-8px);
+        box-shadow: 0 15px 40px rgba(183, 125, 74, 0.3);
+    }
+    
+    .review-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .reviewer-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 700;
+        color: #ffffff;
+        flex-shrink: 0;
+    }
+    
+    .reviewer-info {
+        flex: 1;
+    }
+    
+    .reviewer-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 5px;
+    }
+    
+    .review-stars {
+        color: #FFD700;
+        font-size: 16px;
+        letter-spacing: 2px;
+    }
+    
+    .review-text {
+        color: #999;
+        line-height: 1.7;
+        font-size: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .review-source {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: rgba(183, 125, 74, 0.1);
+        border-radius: 15px;
+        font-size: 13px;
+        color: #B07D4A;
+        font-weight: 600;
+    }
+    
+    /* CTA Section */
+    .cta-section {
+        background: linear-gradient(135deg, #B07D4A, #C724B1);
+        border-radius: 25px;
+        padding: 80px 40px;
+        text-align: center;
+        margin: 80px 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        top: -100px;
+        right: -100px;
+    }
+    
+    .cta-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .cta-section h2 {
+        font-size: 42px;
+        color: #ffffff;
+        margin-bottom: 20px;
+    }
+    
+    .cta-section p {
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 35px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .btn-cta {
+        display: inline-block;
+        padding: 18px 45px;
+        background: #ffffff;
+        color: #B07D4A;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-cta:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 42px;
+        }
+        
+        .hero p {
+            font-size: 16px;
+        }
+        
+        .section-title, .reviews-title {
+            font-size: 32px;
+        }
+        
+        .services-grid,
+        .features-grid,
+        .reviews-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-badge">✂️ თბილისის #1 Barbershop</div>
+        <h1>MAD-MEN</h1>
+        <p>სადაც სტილი, ხარისხი და პროფესიონალიზმი ერთმანეთს ხვდება. დაჯავშნეთ თქვენი ვიზიტი და მიიღეთ საუკეთესო სერვისი.</p>
+        <div class="hero-buttons">
+            <a href="/booking" class="btn-hero btn-hero-primary">დაჯავშნა ახლავე</a>
+            <a href="/services" class="btn-hero btn-hero-secondary">სერვისები</a>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section class="section">
+    <div class="section-header">
+        <div class="section-badge">✨ ჩვენი სერვისები</div>
+        <h2 class="section-title">რას გთავაზობთ</h2>
+        <p class="section-subtitle">პროფესიონალური მომსახურება თანამედროვე მიდგომით და უმაღლესი ხარისხით</p>
+    </div>
+    
+    <div class="services-grid">
+        <div class="service-card">
+            <div class="service-icon">✂️</div>
+            <h3>კლასიკური თმის შეჭრა</h3>
+            <p>პროფესიონალური თმის შეჭრა გამოცდილი ბარბერის მიერ</p>
+            <div class="service-price">30₾ <span>/ 45 წთ</span></div>
+            <a href="/booking" class="btn-service">დაჯავშნა</a>
+        </div>
+        
+        <div class="service-card">
+            <div class="service-icon">🪒</div>
+            <h3>წვერის მოვლა</h3>
+            <p>წვერის დახვეწა, ფორმირება და ტრიმინგი</p>
+            <div class="service-price">25₾ <span>/ 30 წთ</span></div>
+            <a href="/booking" class="btn-service">დაჯავშნა</a>
+        </div>
+        
+        <div class="service-card">
+            <div class="service-icon">💈</div>
+            <h3>სრული პაკეტი</h3>
+            <p>თმის შეჭრა + წვერის მოვლა + ფეის მასაჟი</p>
+            <div class="service-price">50₾ <span>/ 75 წთ</span></div>
+            <a href="/booking" class="btn-service">დაჯავშნა</a>
+        </div>
+        
+        <div class="service-card">
+            <div class="service-icon">🎨</div>
+            <h3>ჰეირ დიზაინი</h3>
+            <p>კრეატიული ჰედრსთაილი და ხაზები</p>
+            <div class="service-price">40₾ <span>/ 60 წთ</span></div>
+            <a href="/booking" class="btn-service">დაჯავშნა</a>
+        </div>
+        
+        <div class="service-card">
+            <div class="service-icon">💦</div>
+            <h3>ბავშვის თმის შეჭრა</h3>
+            <p>12 წლამდე ასაკის ბავშვებისთვის</p>
+            <div class="service-price">20₾ <span>/ 30 წთ</span></div>
+            <a href="/booking" class="btn-service">დაჯავშნა</a>
+        </div>
+        
+        <div class="service-card">
+            <div class="service-icon">✨</div>
+            <h3>სპეციალური მოვლა</h3>
+            <p>თმის მოვლა, მასკა და სტაილინგი</p>
+            <div class="service-price">35₾ <span>/ 45 წთ</span></div>
+            <a href="/booking" class="btn-service">დაჯავშნა</a>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="section">
+    <div class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">5000+</div>
+                <div class="stat-label">კმაყოფილი კლიენტი</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">10+</div>
+                <div class="stat-label">გამოცდილი ბარბერი</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">15+</div>
+                <div class="stat-label">სერვისი</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">99%</div>
+                <div class="stat-label">შეფასება</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Reviews Section -->
+<section class="reviews-section">
+    <div class="reviews-container">
+        <div class="reviews-header">
+            <div class="section-badge">⭐ რეალური შეფასებები</div>
+            <h2 class="reviews-title">რას ამბობენ კლიენტები</h2>
+            <p class="reviews-subtitle">ნახეთ რეალური შეფასებები Google-იდან</p>
+            <p style="margin-top: 15px;">
+                <a href="https://www.google.com/maps/place/Barbershop+MAD+MEN/@41.7943795,44.8179901,17z/data=!3m1!4b1!4m6!3m5!1s0x40446d8d6aeafce7:0x14e3c42a731ef168!8m2!3d41.7943795!4d44.8179901" 
+                   target="_blank" 
+                   style="color: #B07D4A; text-decoration: none; font-weight: 600; font-size: 16px;">
+                    📍 ყველა რევიუს ნახვა Google Maps-ზე →
+                </a>
+            </p>
+        </div>
+        
+        <div class="reviews-grid">
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-avatar">G</div>
+                    <div class="reviewer-info">
+                        <div class="reviewer-name">Google კლიენტი</div>
+                        <div class="review-stars">★★★★★</div>
+                    </div>
+                </div>
+                <p class="review-text">
+                    საუკეთესო ბარბერშოპი თბილისში! პროფესიონალი გუნდი, მოსაწყობი ატმოსფერო და ბოლომდე კმაყოფილი დარჩი თითოეული ვიზიტით. განსაკუთრებით მირჩევნია ლუკა - ნამდვილი ოსტატია!
+                </p>
+                <span class="review-source">
+                    <span>📍</span>
+                    <span>Google Reviews</span>
+                </span>
+            </div>
+            
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-avatar">D</div>
+                    <div class="reviewer-info">
+                        <div class="reviewer-name">Google კლიენტი</div>
+                        <div class="review-stars">★★★★★</div>
+                    </div>
+                </div>
+                <p class="review-text">
+                    პირველი გამოცდილება MAD-MEN-ში და აბსოლუტურად შეყვარებული დავრჩი! უზუსტესი fade-ი რაც ოდესმე მქონია. ონლაინ დაჯავშნის სისტემა ძალიან მოსახერხებელია. 100% რეკომენდაცია!
+                </p>
+                <span class="review-source">
+                    <span>📍</span>
+                    <span>Google Reviews</span>
+                </span>
+            </div>
+            
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="reviewer-avatar">N</div>
+                    <div class="reviewer-info">
+                        <div class="reviewer-name">Google კლიენტი</div>
+                        <div class="review-stars">★★★★★</div>
+                    </div>
+                </div>
+                <p class="review-text">
+                    დავდივარ MAD-MEN-ში უკვე 2 წელია და არასოდეს გამიცრუა. ყოველთვის პუნქტუალურები არიან, იყენებენ პრემიუმ პროდუქტებს და სტილის შერჩევაში საუკეთესოდ გიკონსულტირებენ. ღირს თავისი ფასი!
+                </p>
+                <span class="review-source">
+                    <span>📍</span>
+                    <span>Google Reviews</span>
+                </span>
+            </div>
+        </div>
+        
+        <!-- Google Reviews CTA Button -->
+        <div style="text-align: center; margin-top: 50px;">
+            <a href="https://www.google.com/maps/place/Barbershop+MAD+MEN/@41.7943795,44.8179901,17z/data=!4m8!3m7!1s0x40446d8d6aeafce7:0x14e3c42a731ef168!8m2!3d41.7943795!4d44.8179901!9m1!1b1!16s%2Fg%2F11shbyszyq" 
+               target="_blank"
+               style="display: inline-block; padding: 18px 45px; background: linear-gradient(135deg, #B07D4A, #C724B1); color: #ffffff; border-radius: 30px; text-decoration: none; font-weight: 700; font-size: 16px; transition: all 0.3s ease; box-shadow: 0 8px 25px rgba(183, 125, 74, 0.3);">
+                ⭐ ყველა Google Reviews-ის ნახვა
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="section">
+    <div class="section-header">
+        <div class="section-badge">⭐ რატომ ჩვენ</div>
+        <h2 class="section-title">რატომ MAD-MEN?</h2>
+        <p class="section-subtitle">ჩვენ ვთავაზობთ მეტს, ვიდრე უბრალოდ თმის შეჭრას - ეს არის სრული გამოცდილება</p>
+    </div>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">👨‍🎨</div>
+            <h3>პროფესიონალი გუნდი</h3>
+            <p>ჩვენი ბარბერები სერთიფიცირებული და მრავალწლიანი გამოცდილების მქონე სპეციალისტები არიან</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">🏆</div>
+            <h3>პრემიუმ ხარისხი</h3>
+            <p>ვიყენებთ მხოლოდ საუკეთესო პროდუქტებს და თანამედროვე ტექნიკას</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">⏰</div>
+            <h3>მოქნილი გრაფიკი</h3>
+            <p>ონლაინ დაჯავშნა და მოსახერხებელი სამუშაო საათები თქვენი კომფორტისთვის</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>ინდივიდუალური მიდგომა</h3>
+            <p>ყველა კლიენტი უნიკალურია - ვთავაზობთ პერსონალიზებულ კონსულტაციას</p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="section">
+    <div class="cta-section">
+        <div class="cta-content">
+            <h2>მზად ხარ ახალი იმიჯისთვის?</h2>
+            <p>დაჯავშნე შენი ვიზიტი ახლავე და მიიღე 10% ფასდაკლება პირველ ვიზიტზე! ჩვენი პროფესიონალი გუნდი მოელოდება შენს ვიზიტს.</p>
+            <a href="/booking" class="btn-cta">დაჯავშნა ახლავე →</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

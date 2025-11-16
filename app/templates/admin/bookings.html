@@ -1,0 +1,438 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}ჯავშნების სია{% endblock %}
+{% block page_title %}ჯავშნების სია{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .filter-tabs {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .filter-tab {
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .filter-tab:hover {
+        background: rgba(176, 125, 74, 0.1);
+        border-color: var(--primary-gold);
+        color: var(--primary-gold);
+    }
+
+    .filter-tab.active {
+        background: linear-gradient(135deg, rgba(176, 125, 74, 0.2), rgba(199, 36, 177, 0.2));
+        border-color: var(--primary-gold);
+        color: var(--text-primary);
+    }
+
+    .btn-create {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
+        border: none;
+        border-radius: 8px;
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(176, 125, 74, 0.4);
+    }
+
+    .bookings-table {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead {
+        background: rgba(176, 125, 74, 0.05);
+    }
+
+    th {
+        padding: 15px 20px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 14px;
+    }
+
+    tbody tr {
+        transition: background 0.3s ease;
+    }
+
+    tbody tr:hover {
+        background: rgba(176, 125, 74, 0.05);
+    }
+
+    .customer-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .customer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .customer-details h4 {
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 3px;
+    }
+
+    .customer-details p {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .status-pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+        border: 1px solid var(--warning);
+    }
+
+    .status-confirmed {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border: 1px solid var(--success);
+    }
+
+    .status-cancelled {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+    }
+
+    .status-completed {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+        border: 1px solid var(--info);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .btn-icon:hover {
+        background: rgba(176, 125, 74, 0.1);
+        border-color: var(--primary-gold);
+        color: var(--primary-gold);
+    }
+
+    .btn-icon.delete:hover {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 25px;
+        padding: 20px;
+    }
+
+    .page-link {
+        padding: 8px 14px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 13px;
+        transition: all 0.3s ease;
+    }
+
+    .page-link:hover {
+        background: rgba(176, 125, 74, 0.1);
+        border-color: var(--primary-gold);
+        color: var(--primary-gold);
+    }
+
+    .page-link.active {
+        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
+        border-color: transparent;
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    @media (max-width: 1024px) {
+        .page-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-tabs {
+            order: 2;
+        }
+
+        .btn-create {
+            order: 1;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 768px) {
+        th, td {
+            padding: 12px 10px;
+            font-size: 12px;
+        }
+
+        .customer-avatar {
+            width: 35px;
+            height: 35px;
+            font-size: 12px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-actions">
+    <div class="filter-tabs">
+        <a href="{{ url_for('admin.bookings', status='all') }}" 
+           class="filter-tab {% if status_filter == 'all' %}active{% endif %}">
+            ყველა
+        </a>
+        <a href="{{ url_for('admin.bookings', status='pending') }}" 
+           class="filter-tab {% if status_filter == 'pending' %}active{% endif %}">
+            მოლოდინში
+        </a>
+        <a href="{{ url_for('admin.bookings', status='confirmed') }}" 
+           class="filter-tab {% if status_filter == 'confirmed' %}active{% endif %}">
+            დადასტურებული
+        </a>
+        <a href="{{ url_for('admin.bookings', status='cancelled') }}" 
+           class="filter-tab {% if status_filter == 'cancelled' %}active{% endif %}">
+            გაუქმებული
+        </a>
+    </div>
+
+    {% if current_user.is_admin() or current_user.is_reception() %}
+    <a href="{{ url_for('admin.booking_create') }}" class="btn-create">
+        <span>➕</span>
+        <span>ახალი ჯავშანი</span>
+    </a>
+    {% endif %}
+</div>
+
+<div class="bookings-table">
+    {% if bookings.items %}
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>კლიენტი</th>
+                    <th>სერვისი</th>
+                    <th>ბარბერი</th>
+                    <th>თარიღი/დრო</th>
+                    <th>სტატუსი</th>
+                    <th>მოქმედებები</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings.items %}
+                <tr>
+                    <td>#{{ booking.id }}</td>
+                    <td>
+                        <div class="customer-info">
+                            <div class="customer-avatar">
+                                {{ booking.client_name[0] if booking.client_name else booking.customer_name[0] }}
+                            </div>
+                            <div class="customer-details">
+                                <h4>{{ booking.client_name or booking.customer_name }}</h4>
+                                <p>{{ booking.client_phone or booking.customer_phone }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ booking.service.name }}</td>
+                    <td>
+                        {% if booking.barber %}
+                            {{ booking.barber.name }}
+                        {% else %}
+                            <span style="color: var(--text-secondary);">ნებისმიერი</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if booking.start_time %}
+                            {{ booking.start_time.strftime('%d/%m/%Y') }}<br>
+                            <span style="color: var(--text-secondary); font-size: 12px;">
+                                {{ booking.start_time.strftime('%H:%M') }} - {{ booking.end_time.strftime('%H:%M') }}
+                            </span>
+                        {% else %}
+                            {{ booking.date.strftime('%d/%m/%Y') }}<br>
+                            <span style="color: var(--text-secondary); font-size: 12px;">
+                                {{ booking.time.strftime('%H:%M') }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ booking.status }}">
+                            {% if booking.status == 'pending' %}მოლოდინში
+                            {% elif booking.status == 'confirmed' %}დადასტურებული
+                            {% elif booking.status == 'cancelled' %}გაუქმებული
+                            {% elif booking.status == 'completed' %}დასრულებული
+                            {% else %}{{ booking.status }}
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if current_user.is_admin() or current_user.is_reception() %}
+                            <a href="{{ url_for('admin.booking_edit', id=booking.id) }}" 
+                               class="btn-icon" 
+                               title="რედაქტირება">
+                                ✏️
+                            </a>
+                            <form method="POST" 
+                                  action="{{ url_for('admin.booking_delete', id=booking.id) }}" 
+                                  style="display: inline;"
+                                  onsubmit="return confirm('დარწმუნებული ხართ რომ გსურთ წაშლა?');">
+                                <button type="submit" class="btn-icon delete" title="წაშლა">
+                                    🗑️
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if bookings.pages > 1 %}
+    <div class="pagination">
+        {% if bookings.has_prev %}
+            <a href="{{ url_for('admin.bookings', page=bookings.prev_num, status=status_filter) }}" 
+               class="page-link">← წინა</a>
+        {% endif %}
+
+        {% for page_num in bookings.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+                <a href="{{ url_for('admin.bookings', page=page_num, status=status_filter) }}" 
+                   class="page-link {% if page_num == bookings.page %}active{% endif %}">
+                    {{ page_num }}
+                </a>
+            {% else %}
+                <span class="page-link" style="border: none; background: transparent;">...</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if bookings.has_next %}
+            <a href="{{ url_for('admin.bookings', page=bookings.next_num, status=status_filter) }}" 
+               class="page-link">შემდეგი →</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <h3>ჯავშნები არ მოიძებნა</h3>
+        <p>ამ კატეგორიაში ჯერ არ არის შექმნილი ჯავშნები</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

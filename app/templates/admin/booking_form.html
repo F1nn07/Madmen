@@ -1,0 +1,262 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}{{ 'ჯავშნის რედაქტირება' if booking else 'ახალი ჯავშანი' }}{% endblock %}
+{% block page_title %}{{ 'ჯავშნის რედაქტირება #' + booking.id|string if booking else 'ახალი ჯავშნის შექმნა' }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gold: #B07D4A;
+        --secondary-pink: #C724B1;
+        --card-bg: #1a1a1a;
+        --border-color: #333;
+        --text-primary: #ffffff;
+        --text-secondary: #b0b0b0;
+    }
+
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 30px;
+    }
+
+    .form-section {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border-color);
+    }
+    
+    .form-group {
+        margin-bottom: 16px;
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+    
+    .form-label.required::after {
+        content: ' *';
+        color: #ef4444;
+    }
+    
+    .form-input,
+    .form-select,
+    .form-textarea {
+        width: 100%;
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+    
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-gold);
+        background: rgba(176, 125, 74, 0.1);
+        box-shadow: 0 0 0 3px rgba(176, 125, 74, 0.1);
+    }
+    
+    .form-select {
+        cursor: pointer;
+    }
+    
+    .form-textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .form-error {
+        display: block;
+        font-size: 12px;
+        color: #ef4444;
+        margin-top: 4px;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 2px solid var(--border-color);
+    }
+    
+    .btn-submit {
+        flex: 1;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(176, 125, 74, 0.4);
+    }
+    
+    .btn-cancel {
+        padding: 12px 24px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-block;
+        text-align: center;
+    }
+    
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--text-primary);
+        color: var(--text-primary);
+    }
+
+    @media (max-width: 640px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        
+        <!-- Client Information Section -->
+        <div class="form-section">
+            <h4 class="section-title">კლიენტის ინფორმაცია</h4>
+            
+            <div class="form-group">
+                {{ form.client_name.label(class="form-label required") }}
+                {{ form.client_name(class="form-input", placeholder="მაგ: გიორგი გელაშვილი") }}
+                {% if form.client_name.errors %}
+                    <span class="form-error">{{ form.client_name.errors[0] }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.client_phone.label(class="form-label required") }}
+                    {{ form.client_phone(class="form-input", placeholder="+995 XXX XX XX XX") }}
+                    {% if form.client_phone.errors %}
+                        <span class="form-error">{{ form.client_phone.errors[0] }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.client_email.label(class="form-label") }}
+                    {{ form.client_email(class="form-input", placeholder="email@example.com") }}
+                    {% if form.client_email.errors %}
+                        <span class="form-error">{{ form.client_email.errors[0] }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Booking Details Section -->
+        <div class="form-section">
+            <h4 class="section-title">ჯავშნის დეტალები</h4>
+            
+            <div class="form-group">
+                {{ form.service_id.label(class="form-label required") }}
+                {{ form.service_id(class="form-select") }}
+                {% if form.service_id.errors %}
+                    <span class="form-error">{{ form.service_id.errors[0] }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                {{ form.barber_id.label(class="form-label required") }}
+                {{ form.barber_id(class="form-select") }}
+                {% if form.barber_id.errors %}
+                    <span class="form-error">{{ form.barber_id.errors[0] }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    {{ form.booking_date.label(class="form-label required") }}
+                    {{ form.booking_date(class="form-input") }}
+                    {% if form.booking_date.errors %}
+                        <span class="form-error">{{ form.booking_date.errors[0] }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    {{ form.booking_time.label(class="form-label required") }}
+                    {{ form.booking_time(class="form-input") }}
+                    {% if form.booking_time.errors %}
+                        <span class="form-error">{{ form.booking_time.errors[0] }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                {{ form.status.label(class="form-label") }}
+                {{ form.status(class="form-select") }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.notes.label(class="form-label") }}
+                {{ form.notes(class="form-textarea", rows="3", placeholder="დამატებითი ინფორმაცია...") }}
+                {% if form.notes.errors %}
+                    <span class="form-error">{{ form.notes.errors[0] }}</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">
+                {{ 'განახლება' if booking else 'შენახვა' }}
+            </button>
+            <a href="{{ url_for('admin.bookings') }}" class="btn-cancel">
+                გაუქმება
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

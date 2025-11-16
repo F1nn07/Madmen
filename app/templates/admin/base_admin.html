@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %} - MAD-MEN</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/madmen-logo.png') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gold: #B07D4A;
+            --secondary-pink: #C724B1;
+            --dark-bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --border-color: #333;
+            --text-primary: #ffffff;
+            --text-secondary: #888;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-logo {
+            padding: 0 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .sidebar-logo img {
+            width: 120px;
+            height: auto;
+        }
+
+        .sidebar-logo h2 {
+            font-family: 'Slab Serif', serif;
+            background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        .sidebar-nav {
+            padding: 0 10px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .nav-item:hover {
+            background: rgba(176, 125, 74, 0.1);
+            color: var(--primary-gold);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(176, 125, 74, 0.2), rgba(199, 36, 177, 0.2));
+            color: var(--text-primary);
+            border-left: 3px solid var(--primary-gold);
+        }
+
+        .nav-item-icon {
+            width: 20px;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .nav-section {
+            padding: 20px 20px 10px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Top Header */
+        .top-header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .btn-logout {
+            padding: 8px 16px;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 30px;
+        }
+
+        /* Flash Messages */
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+
+        .flash-message {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .flash-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 4px solid var(--success);
+            color: var(--success);
+        }
+
+        .flash-danger,
+        .flash-error {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .flash-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--warning);
+            color: var(--warning);
+        }
+
+        .flash-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid var(--info);
+            color: var(--info);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .sidebar-logo h2,
+            .nav-item-text,
+            .nav-section {
+                display: none;
+            }
+
+            .nav-item {
+                justify-content: center;
+            }
+
+            .nav-item-icon {
+                margin: 0;
+            }
+
+            .main-content {
+                margin-left: 70px;
+            }
+
+            .content-area {
+                padding: 20px 15px;
+            }
+
+            .user-details {
+                display: none;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <img src="{{ url_for('static', filename='images/madmen-logo.png') }}" alt="MAD-MEN">
+            <h2>Admin Panel</h2>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">მენიუ</div>
+            
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+                <span class="nav-item-icon">📊</span>
+                <span class="nav-item-text">დაფა</span>
+            </a>
+
+            <a href="{{ url_for('admin.bookings') }}" class="nav-item {% if request.endpoint and 'booking' in request.endpoint %}active{% endif %}">
+                <span class="nav-item-icon">📅</span>
+                <span class="nav-item-text">ჯავშნები</span>
+            </a>
+
+            {% if current_user.is_admin() %}
+            <div class="nav-section">მართვა</div>
+            
+            <a href="{{ url_for('admin.services') }}" class="nav-item {% if request.endpoint and 'service' in request.endpoint %}active{% endif %}">
+                <span class="nav-item-icon">✂️</span>
+                <span class="nav-item-text">სერვისები</span>
+            </a>
+
+            <a href="{{ url_for('admin.users') }}" class="nav-item {% if request.endpoint and 'user' in request.endpoint %}active{% endif %}">
+                <span class="nav-item-icon">👥</span>
+                <span class="nav-item-text">მომხმარებლები</span>
+            </a>
+
+            <a href="{{ url_for('admin.statistics') }}" class="nav-item {% if request.endpoint == 'admin.statistics' %}active{% endif %}">
+                <span class="nav-item-icon">📈</span>
+                <span class="nav-item-text">სტატისტიკა</span>
+            </a>
+            {% endif %}
+
+            <div class="nav-section">სხვა</div>
+            
+            <a href="{{ url_for('main.index') }}" class="nav-item" target="_blank">
+                <span class="nav-item-icon">🌐</span>
+                <span class="nav-item-text">ვებსაიტი</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Header -->
+        <header class="top-header">
+            <div class="header-left">
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+            </div>
+
+            <div class="header-right">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        {{ current_user.first_name[0] if current_user.first_name else current_user.username[0] }}
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name">{{ current_user.get_full_name() }}</span>
+                        <span class="user-role">{{ current_user.role|upper }}</span>
+                    </div>
+                </div>
+                <a href="{{ url_for('admin.logout') }}" class="btn-logout">გამოსვლა</a>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <main class="content-area">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for category, message in messages %}
+                            <div class="flash-message flash-{{ category }}">
+                                <span>
+                                    {% if category == 'success' %}✅
+                                    {% elif category == 'danger' or category == 'error' %}❌
+                                    {% elif category == 'warning' %}⚠️
+                                    {% elif category == 'info' %}ℹ️
+                                    {% endif %}
+                                </span>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(() => {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(msg => {
+                msg.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => msg.remove(), 300);
+            });
+        }, 5000);
+
+        // Add slideOut animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideOut {
+                to {
+                    opacity: 0;
+                    transform: translateX(100%);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

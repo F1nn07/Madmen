@@ -1,0 +1,338 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}მომხმარებლების მართვა{% endblock %}
+{% block page_title %}მომხმარებლების მართვა{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .btn-create {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
+        border: none;
+        border-radius: 8px;
+        color: white;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(176, 125, 74, 0.4);
+    }
+
+    .users-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    .user-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 25px;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .user-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-gold);
+        box-shadow: 0 10px 30px rgba(176, 125, 74, 0.2);
+    }
+
+    .user-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .user-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .user-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .user-name {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 4px;
+        color: var(--text-primary);
+    }
+
+    .user-username {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .user-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    .badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .badge-admin {
+        background: rgba(199, 36, 177, 0.1);
+        color: var(--secondary-pink);
+        border: 1px solid var(--secondary-pink);
+    }
+
+    .badge-barber {
+        background: rgba(176, 125, 74, 0.1);
+        color: var(--primary-gold);
+        border: 1px solid var(--primary-gold);
+    }
+
+    .badge-reception {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+        border: 1px solid var(--info);
+    }
+
+    .badge-active {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border: 1px solid var(--success);
+    }
+
+    .badge-inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border: 1px solid var(--danger);
+    }
+
+    .user-details {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    .user-detail {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .user-detail-icon {
+        font-size: 14px;
+    }
+
+    .user-actions {
+        display: flex;
+        gap: 8px;
+        padding-top: 15px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-action {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary);
+    }
+
+    .btn-action:hover {
+        background: rgba(176, 125, 74, 0.1);
+        border-color: var(--primary-gold);
+        color: var(--primary-gold);
+    }
+
+    .btn-action.delete {
+        border: none;
+        background: transparent;
+    }
+
+    .btn-action.delete:hover {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .users-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header {
+            flex-direction: column;
+            gap: 15px;
+            align-items: stretch;
+        }
+
+        .btn-create {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <p style="color: var(--text-secondary); font-size: 14px;">მართეთ გუნდის წევრები და წვდომები</p>
+    </div>
+    <a href="{{ url_for('admin.user_create') }}" class="btn-create">
+        <span>➕</span>
+        <span>ახალი მომხმარებელი</span>
+    </a>
+</div>
+
+{% if users %}
+<div class="users-grid">
+    {% for user in users %}
+    <div class="user-card">
+        <div class="user-header">
+            <div class="user-avatar">
+                {{ user.first_name[0] if user.first_name else user.username[0] }}
+            </div>
+            <div class="user-info">
+                <div class="user-name">{{ user.get_full_name() }}</div>
+                <div class="user-username">@{{ user.username }}</div>
+            </div>
+        </div>
+
+        <div class="user-badges">
+            {% if user.role == 'admin' %}
+                <span class="badge badge-admin">👑 ადმინი</span>
+            {% elif user.role == 'barber' %}
+                <span class="badge badge-barber">✂️ ბარბერი</span>
+            {% elif user.role in ['receptionist', 'reception'] %}
+                <span class="badge badge-reception">📞 რეცეფცია</span>
+            {% endif %}
+
+            <span class="badge badge-{{ 'active' if user.is_active else 'inactive' }}">
+                {{ 'აქტიური' if user.is_active else 'არააქტიური' }}
+            </span>
+        </div>
+
+        <div class="user-details">
+            {% if user.email %}
+            <div class="user-detail">
+                <span class="user-detail-icon">📧</span>
+                <span>{{ user.email }}</span>
+            </div>
+            {% endif %}
+
+            {% if user.phone %}
+            <div class="user-detail">
+                <span class="user-detail-icon">📱</span>
+                <span>{{ user.phone }}</span>
+            </div>
+            {% endif %}
+
+            {% if user.specialization and user.role == 'barber' %}
+            <div class="user-detail">
+                <span class="user-detail-icon">⭐</span>
+                <span>{{ user.specialization }}</span>
+            </div>
+            {% endif %}
+
+            <div class="user-detail">
+                <span class="user-detail-icon">📅</span>
+                <span>შეიქმნა: {{ user.created_at.strftime('%d/%m/%Y') }}</span>
+            </div>
+        </div>
+
+        <div class="user-actions">
+            <a href="{{ url_for('admin.user_edit', id=user.id) }}" class="btn-action">
+                <span>✏️</span>
+                <span>რედაქტირება</span>
+            </a>
+            {% if user.id != current_user.id %}
+            <form method="POST" 
+                  action="{{ url_for('admin.user_delete', id=user.id) }}" 
+                  style="flex: 0;"
+                  onsubmit="return confirm('დარწმუნებული ხართ რომ გსურთ წაშლა?');">
+                <button type="submit" class="btn-action delete">
+                    🗑️
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">👥</div>
+    <h3>მომხმარებლები არ მოიძებნა</h3>
+    <p>დაამატეთ პირველი მომხმარებელი რომ დაიწყოთ</p>
+    <br>
+    <a href="{{ url_for('admin.user_create') }}" class="btn-create">
+        <span>➕</span>
+        <span>ახალი მომხმარებელი</span>
+    </a>
+</div>
+{% endif %}
+{% endblock %}

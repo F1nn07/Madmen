@@ -1,0 +1,103 @@
+{% extends "admin/base_admin.html" %}
+
+{% block page_title %}ბარბერები{% endblock %}
+{% block page_subtitle %}ბარბერების მენეჯმენტი{% endblock %}
+
+{% block content %}
+
+<!-- Barbers Grid -->
+{% if barbers %}
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px;">
+    {% for barber in barbers %}
+    <div class="content-section" style="padding: 0; overflow: hidden;">
+        <!-- Barber Image -->
+        <div style="height: 200px; background: linear-gradient(135deg, rgba(183, 125, 74, 0.1), rgba(199, 36, 177, 0.1)); display: flex; align-items: center; justify-content: center; position: relative;">
+            {% if barber.image_url %}
+            <img src="{{ barber.image_url }}" alt="{{ barber.name }}" 
+                 style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+            <div style="font-size: 64px;">👨‍🎨</div>
+            {% endif %}
+            
+            <!-- Status Badge -->
+            {% if barber.is_available %}
+            <span style="position: absolute; top: 15px; right: 15px; background: rgba(76, 175, 80, 0.9); color: #ffffff; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                ● ხელმისაწვდომი
+            </span>
+            {% else %}
+            <span style="position: absolute; top: 15px; right: 15px; background: rgba(244, 67, 54, 0.9); color: #ffffff; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                ● დაკავებული
+            </span>
+            {% endif %}
+        </div>
+        
+        <!-- Barber Info -->
+        <div style="padding: 25px;">
+            <h3 style="font-size: 20px; color: #B07D4A; margin-bottom: 5px; font-weight: 600;">
+                {{ barber.name }}
+            </h3>
+            <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                {{ barber.position }}
+            </p>
+            
+            <!-- Bio -->
+            {% if barber.bio %}
+            <p style="color: #999; font-size: 13px; margin-bottom: 15px; line-height: 1.6;">
+                {{ barber.bio[:100] }}{% if barber.bio|length > 100 %}...{% endif %}
+            </p>
+            {% endif %}
+            
+            <!-- Experience -->
+            <div style="display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(183, 125, 74, 0.05); border-radius: 10px; margin-bottom: 15px;">
+                <span style="font-size: 20px;">📅</span>
+                <div>
+                    <div style="font-size: 11px; color: #666; text-transform: uppercase;">გამოცდილება</div>
+                    <div style="font-size: 14px; color: #ffffff; font-weight: 600;">{{ barber.experience_years }} წელი</div>
+                </div>
+            </div>
+            
+            <!-- Rating -->
+            {% if barber.rating %}
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                <span style="color: #FFD700; font-size: 16px;">★★★★★</span>
+                <span style="color: #999; font-size: 14px;">{{ barber.rating }}</span>
+            </div>
+            {% endif %}
+            
+            <!-- Specialties -->
+            {% if barber.specialties %}
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px;">
+                {% for specialty in barber.specialties.split(',')[:3] %}
+                <span style="background: rgba(199, 36, 177, 0.1); border: 1px solid rgba(199, 36, 177, 0.3); padding: 4px 10px; border-radius: 12px; font-size: 11px; color: #C724B1;">
+                    {{ specialty.strip() }}
+                </span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <!-- Actions -->
+            <div style="display: flex; gap: 10px; padding-top: 15px; border-top: 1px solid rgba(183, 125, 74, 0.1);">
+                <form method="POST" action="{{ url_for('admin.toggle_barber', barber_id=barber.id) }}" style="flex: 1;">
+                    <button type="submit" class="btn" style="width: 100%; background: rgba(183, 125, 74, 0.1); color: #B07D4A; border: 1px solid #B07D4A;">
+                        {% if barber.is_available %}
+                        🔒 დაკავება
+                        {% else %}
+                        🔓 გააქტიურება
+                        {% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="content-section">
+    <div class="empty-state">
+        <div class="empty-icon">👨‍🎨</div>
+        <p>ბარბერები არ მოიძებნა</p>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

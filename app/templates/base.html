@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MAD-MEN Barbershop{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Navigation */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(183, 125, 74, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-container a {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        
+        .logo {
+            height: 100px;
+            width: auto;
+            transition: transform 0.3s ease;
+            display: block;
+        }
+        
+        .logo:hover {
+            transform: scale(1.05);
+        }
+        
+        .nav-center {
+            display: flex;
+            gap: 35px;
+            list-style: none;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 8px 0;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #B07D4A, #C724B1);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .nav-link:hover {
+            color: #B07D4A;
+        }
+        
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #B07D4A, #C724B1);
+            color: #ffffff;
+            padding: 12px 28px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(183, 125, 74, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(183, 125, 74, 0.5);
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-top: 80px;
+            min-height: calc(100vh - 80px);
+        }
+        
+        /* Footer */
+        .footer {
+            background: #0a0a0a;
+            border-top: 1px solid rgba(183, 125, 74, 0.2);
+            padding: 40px 0;
+            margin-top: 80px;
+        }
+        
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+        }
+        
+        .footer-section h3 {
+            color: #B07D4A;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .footer-section p,
+        .footer-section a {
+            color: #999;
+            text-decoration: none;
+            line-height: 1.8;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-section a:hover {
+            color: #B07D4A;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(183, 125, 74, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .social-link:hover {
+            background: linear-gradient(135deg, #B07D4A, #C724B1);
+            transform: translateY(-3px);
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(183, 125, 74, 0.1);
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* Mobile Menu Toggle */
+        .mobile-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .mobile-toggle span {
+            width: 28px;
+            height: 3px;
+            background: #B07D4A;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        /* Responsive */
+        @media (max-width: 968px) {
+            .logo {
+                height: 65px;
+            }
+            
+            .nav-center {
+                position: fixed;
+                top: 80px;
+                left: -100%;
+                flex-direction: column;
+                background: rgba(10, 10, 10, 0.98);
+                width: 100%;
+                padding: 30px;
+                transition: left 0.3s ease;
+                border-bottom: 1px solid rgba(183, 125, 74, 0.2);
+            }
+            
+            .nav-center.active {
+                left: 0;
+            }
+            
+            .nav-right {
+                position: fixed;
+                top: calc(80px + 200px);
+                left: -100%;
+                flex-direction: column;
+                background: rgba(10, 10, 10, 0.98);
+                width: 100%;
+                padding: 20px 30px;
+                transition: left 0.3s ease;
+            }
+            
+            .nav-right.active {
+                left: 0;
+            }
+            
+            .mobile-toggle {
+                display: flex;
+            }
+            
+            .footer-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo {
+                height: 65px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .logo {
+                height: 55px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo-container">
+                <a href="/" style="text-decoration: none;">
+                    <img src="{{ url_for('static', filename='images/madmen-logo.png') }}" alt="MAD-MEN Logo" class="logo">
+                </a>
+            </div>
+            
+            <ul class="nav-center" id="navCenter">
+                <li><a href="/" class="nav-link">მთავარი</a></li>
+                <li><a href="/services" class="nav-link">სერვისები</a></li>
+                <li><a href="/barbers" class="nav-link">ჩვენი გუნდი</a></li>
+                <li><a href="/contact" class="nav-link">კონტაქტი</a></li>
+            </ul>
+            
+            <div class="nav-right" id="navRight">
+                <a href="/booking" class="btn-primary">დაჯავშნა</a>
+            </div>
+            
+            <div class="mobile-toggle" onclick="toggleMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>MAD-MEN</h3>
+                <p>თბილისის საუკეთესო barbershop - სადაც სტილი და ხარისხი ხვდება.</p>
+                <div class="social-links">
+                    <a href="#" class="social-link">📘</a>
+                    <a href="#" class="social-link">📸</a>
+                    <a href="#" class="social-link">🦅</a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h3>სწრაფი ბმულები</h3>
+                <p><a href="/services">სერვისები</a></p>
+                <p><a href="/barbers">ჩვენი გუნდი</a></p>
+                <p><a href="/booking">დაჯავშნა</a></p>
+                <p><a href="/contact">კონტაქტი</a></p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>კონტაქტი</h3>
+                <p>📍 თბილისი, საქართველო</p>
+                <p>📞 +995 555 123 456</p>
+                <p>✉️ info@madmen.ge</p>
+                <p style="margin-top: 10px;">
+                    <a href="https://www.google.com/maps/place/Barbershop+MAD+MEN/@41.7943795,44.8179901,17z" target="_blank" style="color: #B07D4A;">📍 Google Maps</a>
+                </p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>სამუშაო საათები</h3>
+                <p>ორშაბათი - შაბათი: 10:00 - 20:00</p>
+                <p>შაბათი: 10:00 - 20:00</p>
+                <p>კვირა: 12:00 - 18:00</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        function toggleMenu() {
+            const navCenter = document.getElementById('navCenter');
+            const navRight = document.getElementById('navRight');
+            navCenter.classList.toggle('active');
+            navRight.classList.toggle('active');
+        }
+        
+        // Close menu on link click (mobile)
+        document.querySelectorAll('.nav-link, .btn-primary').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('navCenter').classList.remove('active');
+                document.getElementById('navRight').classList.remove('active');
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
