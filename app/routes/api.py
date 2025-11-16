@@ -577,3 +577,108 @@ def get_calendar_bookings():
             'success': False,
             'error': f'შეცდომა: {str(e)}'
         }), 500
+    
+    # დაამატე ეს api.py ფაილში (api_bp blueprint-ში)
+
+@api_bp.route('/admin/bookings/<int:booking_id>/update-datetime', methods=['PATCH'])
+@login_required
+def update_booking_datetime(booking_id):
+    """
+    განაახლებს ჯავშნის დროს (Drag & Drop)
+    
+    Request Body:
+        {
+            "start_time": "2024-11-16T10:00:00",
+            "end_time": "2024-11-16T11:00:00"
+        }
+    """
+    try:
+        # Check permissions
+        if not (current_user.is_admin() or current_user.is_reception()):
+            return jsonify({
+                'success': False,
+                'error': 'არ გაქვთ წვდომა'
+            }), 403
+        
+        booking = Booking.query.get(booking_id)
+        if not booking:
+            return jsonify({
+                'success': False,
+                'error': 'ჯავშანი ვერ მოიძებნა'
+            }), 404
+        
+        data = request.get_json()
+        new_start_str = data.get('start_time')
+        new_end_str = data.get('end_time')
+        
+        if not new_start_str or not new_end_str:
+            return jsonify({
+                'success': False,
+                'error': 'არასრული მონაცემები'
+            }), 400
+        
+        # Parse datetime strings
+        from datetime import datetime
+        try:
+            new_start = datetime.fromisoformat(new_start_str.replace('Z', '+00:00'))
+            new_end = datetime.fromisoformat(new_end_str.replace('Z', '+00:00'))
+        except ValueError as e:
+            return jsonify({
+                'success': False,
+                'error': f'არასწორი თარიღის ფორმატი: {str(e)}'
+            }), 400
+        
+        # Validation: Check if new time slot is available
+        overlapping = Booking.query.filter(
+            Booking.id != booking_id,
+            Booking.barber_id == booking.barber_id,
+            Booking.status.in_(['pending', 'confirmed']),
+            Booking.start_time < new_end,
+            Booking.end_time > new_start
+        ).first()
+        
+        if overlapping:
+            return jsonify({
+                'success': False,
+                'error': f'ეს დრო დაკავებულია (ჯავშანი #{overlapping.id})'
+            }), 400
+        
+        # Update booking
+        old_start = booking.start_time
+        old_end = booking.end_time
+        
+        booking.start_time = new_start
+        booking.end_time = new_end
+        
+        # Update legacy fields too (if they exist)
+        if hasattr(booking, 'date') and hasattr(booking, 'time'):
+            booking.date = new_start.date()
+            booking.time = new_start.time()
+        
+        db.session.commit()
+        
+        # Log the change
+        import logging
+        logging.info(
+            f"📅 BOOKING MOVED - ID: {booking_id}, "
+            f"User: {current_user.username}, "
+            f"From: {old_start} - {old_end}, "
+            f"To: {new_start} - {new_end}"
+        )
+        
+        return jsonify({
+            'success': True,
+            'booking_id': booking.id,
+            'new_start': new_start.isoformat(),
+            'new_end': new_end.isoformat(),
+            'message': 'ჯავშანი წარმატებით გადატანილია'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        import logging
+        logging.error(f'Error updating booking datetime: {str(e)}')
+        return jsonify({
+            'success': False,
+            'error': f'შეცდომა: {str(e)}'
+        }), 500

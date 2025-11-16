@@ -393,7 +393,7 @@
             📅 კალენდარის ხედი
         </a>
         {% if current_user.is_admin() or current_user.is_reception() %}
-        <a href="{{ url_for('admin.booking_create') }}" class="btn-create">
+        <a href="{{ url_for('admin.booking_new') }}" class="btn-create">
             ➕ ახალი ჯავშანი
         </a>
         {% endif %}
@@ -539,7 +539,7 @@
             {% endif %}
         </p>
         {% if current_user.is_admin() or current_user.is_reception() %}
-        <a href="{{ url_for('admin.booking_create') }}" class="btn-create" style="margin-top: 20px;">
+        <a href="{{ url_for('admin.booking_new') }}" class="btn-create" style="margin-top: 20px;">
             ➕ შექმენი პირველი ჯავშანი
         </a>
         {% endif %}

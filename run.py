@@ -277,5 +277,26 @@ def list_routes(app):
 # MAIN APPLICATION
 # ========================
 
-# Create logs directory
 os.makedirs('logs', exist_ok=True)
+
+# Setup logging
+setup_logging()
+
+# Create Flask app
+app = create_app()
+
+# Setup middleware
+setup_request_logging(app)
+setup_performance_monitoring(app)
+
+# Print startup info
+print_startup_banner(app)
+list_routes(app)
+
+# Run application
+if __name__ == '__main__':
+    app.run(
+        host='0.0.0.0',
+        port=5001,
+        debug=True
+    )

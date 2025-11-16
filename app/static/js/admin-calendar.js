@@ -1,6 +1,9 @@
 // FullCalendar.js Integration for BarberFlow Admin Panel
 // Complete implementation with all features
 
+// ⚠️ ADMIN PREFIX CONFIGURATION
+const ADMIN_PREFIX = '/madmen-secure-admin-2024';
+
 let calendar;
 let currentBarberFilter = 'all';
 let currentBookingId = null;
@@ -109,9 +112,19 @@ function initializeCalendar() {
             }
         },
         
-        // Optional: enable drag & drop (future feature)
-        editable: false,
+        // 🎯 DRAG & DROP ENABLED
+        editable: true,  // Enable drag, drop, resize
         droppable: false,
+        eventDurationEditable: true,  // Allow resizing
+        
+        // Drag & Drop callbacks
+        eventDrop: function(info) {
+            handleEventDrop(info);
+        },
+        
+        eventResize: function(info) {
+            handleEventResize(info);
+        },
         
         // Event styling
         eventDidMount: function(info) {
@@ -306,8 +319,8 @@ async function showCreateBookingModal(dateStr, dateObj) {
     const time = dateStr.split('T')[1]?.substring(0, 5) || '10:00';
     
     try {
-        // Load form via AJAX
-        const response = await fetch(`/admin/bookings/new?date=${date}&time=${time}`, {
+        // Load form via AJAX - ✅ FIXED URL
+        const response = await fetch(`${ADMIN_PREFIX}/bookings/new?date=${date}&time=${time}`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
@@ -338,8 +351,8 @@ async function showEditBookingModal(bookingId) {
     const modalBody = document.getElementById('createModalBody');
     
     try {
-        // Load form via AJAX
-        const response = await fetch(`/admin/bookings/edit/${bookingId}`, {
+        // Load form via AJAX - ✅ FIXED URL
+        const response = await fetch(`${ADMIN_PREFIX}/bookings/edit/${bookingId}`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
@@ -370,6 +383,80 @@ async function showEditBookingModal(bookingId) {
 // ====================
 // API CALLS
 // ====================
+
+// 🎯 DRAG & DROP: Handle event drop (move to different time/day)
+async function handleEventDrop(info) {
+    const event = info.event;
+    const oldStart = info.oldEvent.start;
+    const newStart = event.start;
+    const newEnd = event.end;
+    
+    // Don't show loading notification - it's too quick and creates clutter
+    // showNotification('მიმდინარეობს განახლება...', 'info');
+    
+    try {
+        const response = await fetch(`/api/admin/bookings/${event.id}/update-datetime`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                start_time: newStart.toISOString(),
+                end_time: newEnd.toISOString()
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('ჯავშანი წარმატებით გადატანილია!', 'success');
+            calendar.refetchEvents();
+        } else {
+            // Revert on error
+            info.revert();
+            showNotification('შეცდომა: ' + (data.error || 'დრო დაკავებულია'), 'error');
+        }
+    } catch (error) {
+        console.error('Error moving booking:', error);
+        info.revert();
+        showNotification('შეცდომა ჯავშნის გადატანისას', 'error');
+    }
+}
+
+// 🎯 RESIZE: Handle event resize (change duration)
+async function handleEventResize(info) {
+    const event = info.event;
+    const newEnd = event.end;
+    
+    // No loading notification for quick operations
+    
+    try {
+        const response = await fetch(`/api/admin/bookings/${event.id}/update-datetime`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                start_time: event.start.toISOString(),
+                end_time: newEnd.toISOString()
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('ხანგრძლივობა შეიცვალა!', 'success');
+            calendar.refetchEvents();
+        } else {
+            info.revert();
+            showNotification('შეცდომა: ' + (data.error || 'არასწორი ხანგრძლივობა'), 'error');
+        }
+    } catch (error) {
+        console.error('Error resizing booking:', error);
+        info.revert();
+        showNotification('შეცდომა', 'error');
+    }
+}
 
 // Update booking status
 async function updateStatus(bookingId, newStatus) {
@@ -417,7 +504,8 @@ async function handleCreateBooking(event) {
     clearFormErrors();
     
     try {
-        const response = await fetch('/admin/bookings/new', {
+        // ✅ FIXED URL
+        const response = await fetch(`${ADMIN_PREFIX}/bookings/new`, {
             method: 'POST',
             body: formData,
             headers: {
@@ -472,7 +560,8 @@ async function handleEditBooking(event, bookingId) {
     clearFormErrors();
     
     try {
-        const response = await fetch(`/admin/bookings/edit/${bookingId}`, {
+        // ✅ FIXED URL
+        const response = await fetch(`${ADMIN_PREFIX}/bookings/edit/${bookingId}`, {
             method: 'POST',
             body: formData,
             headers: {
@@ -517,7 +606,7 @@ function editBooking(bookingId) {
     showEditBookingModal(bookingId);
     
     // Option 2: Redirect to separate page (uncomment if preferred)
-    // window.location.href = `/admin/bookings/edit/${bookingId}`;
+    // window.location.href = `${ADMIN_PREFIX}/bookings/edit/${bookingId}`;
 }
 
 // Delete booking
@@ -527,7 +616,8 @@ async function deleteBooking(bookingId) {
     }
     
     try {
-        const response = await fetch(`/admin/bookings/delete/${bookingId}`, {
+        // ✅ FIXED URL
+        const response = await fetch(`${ADMIN_PREFIX}/bookings/delete/${bookingId}`, {
             method: 'POST',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
@@ -611,7 +701,25 @@ function closeAllModals() {
 }
 
 function showNotification(message, type = 'info') {
-    // Simple notification - შეგიძლიათ შეცვალოთ toast library-ით
+    // Create toast notification element
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
     const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
-    alert(`${emoji} ${message}`);
+    toast.innerHTML = `
+        <span class="toast-icon">${emoji}</span>
+        <span class="toast-message">${message}</span>
+    `;
+    
+    // Add to page
+    document.body.appendChild(toast);
+    
+    // Show with animation
+    setTimeout(() => toast.classList.add('show'), 100);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
