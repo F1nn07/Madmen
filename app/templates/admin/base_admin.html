@@ -34,6 +34,65 @@
             display: flex;
         }
 
+        /* 📱 MOBILE SIDEBAR TOGGLE */
+        .sidebar-toggle-btn {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(176, 125, 74, 0.95), rgba(199, 36, 177, 0.95));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .sidebar-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(176, 125, 74, 0.6);
+        }
+
+        .sidebar-toggle-btn:active {
+            transform: scale(0.95);
+        }
+
+        .sidebar-toggle-btn svg {
+            width: 24px;
+            height: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-toggle-btn.active svg {
+            transform: rotate(90deg);
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 998;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
         /* Sidebar */
         .sidebar {
             width: 260px;
@@ -43,7 +102,7 @@
             position: fixed;
             height: 100vh;
             overflow-y: auto;
-            z-index: 1000;
+            z-index: 999;
         }
 
         .sidebar-logo {
@@ -249,42 +308,76 @@
             color: var(--info);
         }
 
-        /* Responsive */
+        /* 📱 MOBILE RESPONSIVE */
         @media (max-width: 768px) {
+            /* Show toggle button */
+            .sidebar-toggle-btn {
+                display: flex;
+            }
+
+            /* Hide sidebar by default */
             .sidebar {
-                width: 70px;
+                left: -100%;
+                width: 280px;
+                max-width: 85vw;
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 2px 0 25px rgba(0, 0, 0, 0.5);
             }
 
-            .sidebar-logo h2,
-            .nav-item-text,
-            .nav-section {
-                display: none;
+            /* Show sidebar when active */
+            .sidebar.active {
+                left: 0;
             }
 
-            .nav-item {
-                justify-content: center;
-            }
-
-            .nav-item-icon {
-                margin: 0;
-            }
-
+            /* Adjust main content */
             .main-content {
-                margin-left: 70px;
+                margin-left: 0;
             }
 
             .content-area {
                 padding: 20px 15px;
+                margin-top: 60px;
+            }
+
+            .top-header {
+                padding: 15px 70px 15px 15px;
             }
 
             .user-details {
                 display: none;
+            }
+
+            /* Prevent body scroll when sidebar is open */
+            body.sidebar-open {
+                overflow: hidden;
+                position: fixed;
+                width: 100%;
+            }
+        }
+
+        /* Desktop */
+        @media (min-width: 769px) {
+            .sidebar-toggle-btn,
+            .sidebar-overlay {
+                display: none !important;
             }
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <!-- 📱 Mobile Sidebar Toggle Button -->
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" id="sidebarToggleBtn" aria-label="მენიუ">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+    </button>
+
+    <!-- 📱 Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-logo">
@@ -382,7 +475,101 @@
         </main>
     </div>
 
+    <!-- 📱 GLOBAL SIDEBAR TOGGLE SCRIPT -->
     <script>
+        // Toggle sidebar function
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const toggleBtn = document.getElementById('sidebarToggleBtn');
+            const body = document.body;
+            
+            if (!sidebar || !overlay) return;
+            
+            const isActive = sidebar.classList.toggle('active');
+            overlay.classList.toggle('active');
+            
+            if (toggleBtn) {
+                toggleBtn.classList.toggle('active');
+            }
+            
+            // Lock/unlock body scroll on mobile
+            if (window.innerWidth < 768) {
+                if (isActive) {
+                    body.classList.add('sidebar-open');
+                } else {
+                    body.classList.remove('sidebar-open');
+                }
+            }
+        }
+
+        // Initialize sidebar functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            // Close sidebar when clicking overlay
+            if (overlay) {
+                overlay.addEventListener('click', toggleSidebar);
+            }
+            
+            // Close sidebar on escape key (mobile only)
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && window.innerWidth < 768) {
+                    const sidebar = document.querySelector('.sidebar');
+                    if (sidebar && sidebar.classList.contains('active')) {
+                        toggleSidebar();
+                    }
+                }
+            });
+            
+            // Auto-close sidebar when clicking links (mobile only)
+            if (window.innerWidth < 768) {
+                document.querySelectorAll('.sidebar a').forEach(link => {
+                    link.addEventListener('click', function() {
+                        setTimeout(() => {
+                            const sidebar = document.querySelector('.sidebar');
+                            if (sidebar && sidebar.classList.contains('active')) {
+                                toggleSidebar();
+                            }
+                        }, 200);
+                    });
+                });
+            }
+            
+            // Handle window resize
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(function() {
+                    // Close sidebar and cleanup when switching to desktop
+                    if (window.innerWidth >= 768) {
+                        const sidebar = document.querySelector('.sidebar');
+                        const overlay = document.getElementById('sidebarOverlay');
+                        const toggleBtn = document.getElementById('sidebarToggleBtn');
+                        const body = document.body;
+                        
+                        if (sidebar) sidebar.classList.remove('active');
+                        if (overlay) overlay.classList.remove('active');
+                        if (toggleBtn) toggleBtn.classList.remove('active');
+                        body.classList.remove('sidebar-open');
+                    }
+                }, 250);
+            });
+        });
+
+        // Prevent body scroll on iOS when sidebar is open
+        document.addEventListener('touchmove', function(e) {
+            if (document.body.classList.contains('sidebar-open')) {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                
+                // Allow scrolling only within sidebar
+                if (sidebar && !sidebar.contains(e.target) && e.target !== overlay) {
+                    e.preventDefault();
+                }
+            }
+        }, { passive: false });
+
         // Auto-hide flash messages after 5 seconds
         setTimeout(() => {
             const flashMessages = document.querySelectorAll('.flash-message');

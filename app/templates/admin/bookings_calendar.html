@@ -4,8 +4,8 @@
 {% block page_title %}ჯავშნების კალენდარი{% endblock %}
 
 {% block extra_css %}
-<!-- FullCalendar CSS -->
-<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
+<!-- FullCalendar CSS - ✅ FIXED URL -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css' rel='stylesheet' />
 
 <style>
     :root {
@@ -180,6 +180,62 @@
         50% { transform: translateY(-5px); }
     }
 
+    /* 📱 MOBILE SIDEBAR OVERLAY */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        z-index: 998;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+        /* Hide sidebar by default on mobile */
+        .sidebar {
+            position: fixed;
+            left: -280px;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            z-index: 999;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+        }
+
+        /* Show sidebar when active */
+        .sidebar.active {
+            left: 0;
+        }
+
+        /* Adjust main content */
+        .main-content {
+            margin-left: 0 !important;
+            padding-top: 70px; /* Space for fixed header */
+        }
+
+        /* Animate sidebar toggle button */
+        .sidebar.active ~ * .sidebar-toggle-btn svg {
+            transform: rotate(90deg);
+        }
+
+        /* Prevent body scroll when sidebar is open */
+        body.sidebar-open {
+            overflow: hidden;
+        }
+    }
+
     /* 🎨 MODERN CALENDAR CONTAINER */
     .calendar-container {
         background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(35, 35, 35, 0.95));
@@ -278,6 +334,9 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         overflow: hidden;
         position: relative;
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: none;
     }
 
     .fc .fc-event::before {
@@ -292,7 +351,8 @@
         transition: opacity 0.3s;
     }
 
-    .fc .fc-event:hover::before {
+    .fc .fc-event:hover::before,
+    .fc .fc-event:active::before {
         opacity: 1;
     }
 
@@ -302,11 +362,20 @@
         z-index: 10;
     }
 
+    /* 📱 Mobile touch feedback */
+    @media (max-width: 768px) {
+        .fc .fc-event:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+    }
+
     .fc .fc-event-dragging {
         opacity: 0.7;
         cursor: grabbing !important;
         transform: scale(1.05);
         box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        z-index: 999 !important;
     }
 
     /* Event time styling */
@@ -363,76 +432,21 @@
         background: rgba(255, 255, 255, 0.02);
     }
 
-    /* 🎨 MODERN LEGEND */
-    .calendar-legend {
-        display: flex;
-        gap: 24px;
-        margin-top: 24px;
-        flex-wrap: wrap;
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 13px;
-        font-weight: 500;
-        padding: 8px 14px;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 8px;
+    /* Month view "more" link styling */
+    .fc .fc-daygrid-more-link {
+        color: var(--primary-gold);
+        font-weight: 600;
+        background: rgba(176, 125, 74, 0.1);
+        padding: 4px 8px;
+        border-radius: 6px;
+        margin-top: 4px;
+        display: inline-block;
         transition: all 0.3s;
     }
 
-    .legend-item:hover {
-        background: rgba(255, 255, 255, 0.06);
-        transform: translateY(-2px);
-    }
-
-    .legend-color {
-        width: 24px;
-        height: 24px;
-        border-radius: 6px;
-        border: 2px solid;
-        position: relative;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    .legend-color::after {
-        content: '';
-        position: absolute;
-        inset: -2px;
-        border-radius: 6px;
-        padding: 2px;
-        background: inherit;
-        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        opacity: 0.5;
-    }
-
-    .legend-pending { 
-        background: linear-gradient(135deg, #f59e0b, #d97706); 
-        border-color: #fbbf24; 
-    }
-    
-    .legend-confirmed { 
-        background: linear-gradient(135deg, #10b981, #059669); 
-        border-color: #34d399; 
-    }
-    
-    .legend-completed { 
-        background: linear-gradient(135deg, #3b82f6, #2563eb); 
-        border-color: #60a5fa; 
-    }
-    
-    .legend-cancelled { 
-        background: linear-gradient(135deg, #6b7280, #4b5563); 
-        border-color: #9ca3af; 
+    .fc .fc-daygrid-more-link:hover {
+        background: rgba(176, 125, 74, 0.2);
+        transform: scale(1.05);
     }
 
     /* 🎨 MODERN MODAL STYLES */
@@ -620,98 +634,6 @@
     @keyframes pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.5; }
-    }
-
-    /* 🎨 MODERN STATUS BUTTONS */
-    .status-buttons {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        margin: 20px 0;
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .btn-status {
-        padding: 14px 20px;
-        border-radius: 10px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 2px solid;
-        text-align: center;
-        background: rgba(255, 255, 255, 0.03);
-        text-transform: uppercase;
-        letter-spacing: 0.3px;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .btn-status::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        background: currentColor;
-        opacity: 0.1;
-        transform: translate(-50%, -50%);
-        transition: width 0.6s, height 0.6s;
-    }
-
-    .btn-status:hover::before {
-        width: 300px;
-        height: 300px;
-    }
-
-    .btn-status.pending { 
-        border-color: #f59e0b; 
-        color: #f59e0b; 
-    }
-    
-    .btn-status.confirmed { 
-        border-color: #10b981; 
-        color: #10b981; 
-    }
-    
-    .btn-status.completed { 
-        border-color: #3b82f6; 
-        color: #3b82f6; 
-    }
-    
-    .btn-status.cancelled { 
-        border-color: #6b7280; 
-        color: #6b7280; 
-    }
-
-    .btn-status:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    .btn-status.pending:hover {
-        background: rgba(245, 158, 11, 0.15);
-        box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
-    }
-
-    .btn-status.confirmed:hover {
-        background: rgba(16, 185, 129, 0.15);
-        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-    }
-
-    .btn-status.completed:hover {
-        background: rgba(59, 130, 246, 0.15);
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
-    }
-
-    .btn-status.cancelled:hover {
-        background: rgba(107, 114, 128, 0.15);
-        box-shadow: 0 8px 20px rgba(107, 114, 128, 0.3);
     }
 
     /* 🎨 MODAL ACTION BUTTONS */
@@ -953,13 +875,28 @@
         .calendar-controls {
             flex-direction: column;
             align-items: stretch;
+            padding: 16px;
+        }
+        
+        .filter-group {
+            width: 100%;
+        }
+
+        .filter-select {
+            width: 100%;
+        }
+
+        .calendar-actions {
+            width: 100%;
+            justify-content: stretch;
+        }
+
+        .btn-calendar {
+            flex: 1;
+            justify-content: center;
         }
         
         .form-row {
-            grid-template-columns: 1fr;
-        }
-        
-        .status-buttons {
             grid-template-columns: 1fr;
         }
 
@@ -968,17 +905,43 @@
             border-radius: 16px;
         }
 
+        .fc .fc-toolbar {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .fc .fc-toolbar-chunk {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
         .fc .fc-toolbar-title {
             font-size: 20px;
         }
 
-        .calendar-legend {
-            gap: 12px;
+        .fc .fc-button {
+            padding: 10px 14px;
+            font-size: 11px;
         }
 
-        .legend-item {
-            font-size: 12px;
-            padding: 6px 10px;
+        .calendar-hint {
+            font-size: 13px;
+            padding: 12px 16px;
+        }
+
+        /* Smaller event cards on mobile */
+        .fc .fc-event {
+            font-size: 11px;
+            padding: 4px 8px;
+        }
+
+        .fc .fc-event-time {
+            font-size: 10px;
+        }
+
+        .fc .fc-event-title {
+            font-size: 11px;
         }
     }
 
@@ -1041,36 +1004,23 @@
 </div>
 
 {% if current_user.is_admin() or current_user.is_reception() %}
-<div class="calendar-hint">
+<div class="calendar-hint" id="dragDropHint">
     <span>💡</span>
     <strong>Drag & Drop ფუნქცია ჩართულია - გადაათრიე ჯავშანები კალენდარში მარტივად!</strong>
 </div>
+
+<script>
+// 📱 Hide drag hint on mobile
+if (window.innerWidth < 768) {
+    document.getElementById('dragDropHint').style.display = 'none';
+}
+</script>
 {% endif %}
 
 <!-- Calendar Container -->
 <div class="calendar-container">
     <div id="calendar-loader" style="display: none;">ჩატვირთვა</div>
     <div id="booking-calendar"></div>
-
-    <!-- Legend -->
-    <div class="calendar-legend">
-        <div class="legend-item">
-            <div class="legend-color legend-pending"></div>
-            <span>მოლოდინში</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color legend-confirmed"></div>
-            <span>დადასტურებული</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color legend-completed"></div>
-            <span>დასრულებული</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-color legend-cancelled"></div>
-            <span>გაუქმებული</span>
-        </div>
-    </div>
 </div>
 
 <!-- MODAL 1: Event Details -->
