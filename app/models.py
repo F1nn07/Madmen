@@ -39,7 +39,8 @@ class Barber(db.Model):
     email = db.Column(db.String(120))
     is_available = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+    vacation_start = db.Column(db.Date, nullable=True)
+    vacation_end = db.Column(db.Date, nullable=True)
     # Link to User
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     
@@ -49,38 +50,68 @@ class Barber(db.Model):
         return f'<Barber {self.name}>'
 
 
+class Client(db.Model):
+    """კლიენტების ბაზა (CRM)"""
+    __tablename__ = 'clients'
+
+    id = db.Column(db.Integer, primary_key=True)
+    # ტელეფონი არის უნიკალური იდენტიფიკატორი
+    phone = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120))
+    
+    # ადმინისთვის: შენიშვნები და დაბლოკვა
+    notes = db.Column(db.Text) 
+    is_blocked = db.Column(db.Boolean, default=False)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # ურთიერთკავშირი ჯავშნებთან
+    bookings = db.relationship('Booking', backref='client_profile', lazy=True)
+
+    def __repr__(self):
+        return f'<Client {self.name} - {self.phone}>'
+
 class Booking(db.Model):
-    """დაჯავშნების მოდელი"""
+    """დაჯავშნების მოდელი - განახლებული"""
     __tablename__ = 'bookings'
     
     id = db.Column(db.Integer, primary_key=True)
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'), nullable=False)
     barber_id = db.Column(db.Integer, db.ForeignKey('barbers.id'), nullable=True)
-    
-    # ორივე ფორმატი support ვაკეთოთ
-    date = db.Column(db.Date, nullable=True)  # legacy
-    time = db.Column(db.Time, nullable=True)  # legacy
-    start_time = db.Column(db.DateTime, nullable=True)  # ახალი
-    end_time = db.Column(db.DateTime, nullable=True)  # ახალი
-    
+    client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=True)
+    price = db.Column(db.Float, nullable=False, default=0.0) 
+    start_time = db.Column(db.DateTime, nullable=True)
+    end_time = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(20), default='pending')
     
+    # კლიენტის ინფორმაცია
     customer_name = db.Column(db.String(100), nullable=False)
     customer_phone = db.Column(db.String(20), nullable=False)
     customer_email = db.Column(db.String(120))
     notes = db.Column(db.Text)
     
-    # Admin panel-ისთვის დამატებითი ველები
-    client_name = db.Column(db.String(100))  # alias for customer_name
-    client_phone = db.Column(db.String(20))  # alias for customer_phone
-    client_email = db.Column(db.String(120))  # alias for customer_email
+    # Alias fields (Admin panel-თან თავსებადობისთვის)
+    client_name = db.Column(db.String(100))
+    client_phone = db.Column(db.String(20))
+    client_email = db.Column(db.String(120))
     
     confirmation_code = db.Column(db.String(20), unique=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # ✅ Backward Compatibility: რომ კოდის სხვა ნაწილები არ გატყდეს
+    @property
+    def date(self):
+        return self.start_time.date() if self.start_time else None
+
+    @property
+    def time(self):
+        return self.start_time.time() if self.start_time else None
+
     def __repr__(self):
-        return f'<Booking {self.id} - {self.customer_name or self.client_name}>'
+        return f'<Booking {self.id} - {self.customer_name}>'
     
     def generate_confirmation_code(self):
         import random

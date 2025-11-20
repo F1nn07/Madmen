@@ -10,7 +10,6 @@ const bookingState = {
     currentYear: new Date().getFullYear()
 };
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     loadServices();
     loadBarbers();
@@ -18,162 +17,156 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
 });
 
-// Event Listeners
+// Haptic Feedback Helper
+function triggerHaptic() {
+    if (navigator.vibrate) navigator.vibrate(10);
+}
+
 function setupEventListeners() {
-    document.getElementById('nextToBarber').addEventListener('click', () => goToStep(2));
-    document.getElementById('nextToDateTime').addEventListener('click', () => goToStep(3));
-    document.getElementById('nextToContact').addEventListener('click', () => goToStep(4));
-    document.getElementById('nextToConfirmation').addEventListener('click', () => {
-        if (validateContactForm()) {
-            collectCustomerInfo();
-            goToStep(5);
-        }
-    });
+    // Navigation
+    document.getElementById('nextToServices').addEventListener('click', () => { if(validateStep1()) goToStep(2); });
+    document.getElementById('nextToDateTime').addEventListener('click', () => goToStep(4));
+    document.getElementById('nextToConfirmation').addEventListener('click', () => { collectCustomerInfo(); goToStep(5); });
     document.getElementById('confirmBooking').addEventListener('click', submitBooking);
     
+    // Calendar Nav
     document.getElementById('prevMonth').addEventListener('click', () => changeMonth(-1));
     document.getElementById('nextMonth').addEventListener('click', () => changeMonth(1));
     
-    // Real-time validation
-    document.getElementById('customerName').addEventListener('input', function() {
-        this.style.border = '';
-        if (this.value.trim().length >= 2) {
-            this.style.border = '1px solid #10b981';
-        }
-    });
-    
+    // Phone Input Logic
+    let typingTimer;
     document.getElementById('customerPhone').addEventListener('input', function() {
-        this.style.border = '';
-        const cleaned = this.value.replace(/[\s-]/g, '');
-        if (cleaned.length >= 9 && /^[0-9]+$/.test(cleaned)) {
-            this.style.border = '1px solid #10b981';
-        }
-    });
-    
-    document.getElementById('customerEmail').addEventListener('input', function() {
-        this.style.border = '';
-        if (this.value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value)) {
-            this.style.border = '1px solid #10b981';
-        }
+        clearTimeout(typingTimer);
+        const phone = this.value.replace(/\D/g,'');
+        if(phone.length >= 9) typingTimer = setTimeout(() => checkUserPhone(phone), 800);
     });
 }
 
-// Step Navigation
+// Client Lookup
+async function checkUserPhone(phone) {
+    const skeleton = document.getElementById('skeletonLoader');
+    const extraFields = document.getElementById('extraFields');
+    const banner = document.getElementById('welcomeBackBanner');
+    
+    skeleton.classList.remove('hidden');
+    extraFields.classList.add('hidden');
+    banner.classList.add('hidden');
+
+    try {
+        const response = await fetch('/api/clients/lookup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: phone })
+        });
+        const data = await response.json();
+
+        if (data.found) {
+            document.getElementById('customerName').value = data.name;
+            document.getElementById('customerEmail').value = data.email || '';
+            
+            if (data.is_blocked) {
+                alert("თქვენ შეზღუდული გაქვთ ჯავშნის უფლება.");
+                location.reload();
+                return;
+            }
+            if (data.last_visit) {
+                document.getElementById('wbName').textContent = data.name;
+                document.getElementById('wbDate').textContent = data.last_visit.date;
+                document.getElementById('wbBarber').textContent = data.last_visit.barber;
+                banner.classList.remove('hidden');
+            }
+        }
+    } catch (error) { console.error(error); } 
+    finally {
+        skeleton.classList.add('hidden');
+        extraFields.classList.remove('hidden', 'opacity-30', 'pointer-events-none', 'grayscale');
+        extraFields.classList.add('animate-fade-in');
+    }
+}
+
+function validateStep1() {
+    const name = document.getElementById('customerName').value.trim();
+    const phone = document.getElementById('customerPhone').value.trim();
+    if(name.length < 2 || phone.length < 9) { alert('შეავსეთ სახელი და ტელეფონი'); return false; }
+    bookingState.customerInfo = { name: name, phone: phone, email: document.getElementById('customerEmail').value };
+    return true;
+}
+
 function goToStep(step) {
-    // Hide all steps
+    triggerHaptic();
     document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.progress-step').forEach(el => {
-        el.classList.remove('active', 'completed');
-    });
+    document.querySelectorAll('.progress-step').forEach(el => el.classList.remove('active', 'completed'));
     
-    // Show current step
     document.getElementById(`step${step}`).classList.add('active');
-    
-    // Update progress
     document.querySelectorAll('.progress-step').forEach((el, index) => {
         const stepNum = index + 1;
-        if (stepNum < step) {
-            el.classList.add('completed');
-        } else if (stepNum === step) {
-            el.classList.add('active');
-        }
+        if (stepNum < step) el.classList.add('completed');
+        else if (stepNum === step) el.classList.add('active');
     });
     
     bookingState.currentStep = step;
     
-    // Special actions for certain steps
-    if (step === 3) {
-        renderCalendar();
-    } else if (step === 5) {
-        renderConfirmationSummary();
+    // თუ კალენდარზე გადავედით, გადავარენდეროთ რომ სქროლი ამუშავდეს
+    if (step === 4) {
+        setTimeout(renderCalendar, 50); 
     }
-    
-    // Scroll to top
+    if (step === 5) renderConfirmationSummary();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Load Services
 async function loadServices() {
-    try {
-        const response = await fetch('/api/services');
-        const data = await response.json();
-        
-        if (data.success) {
-            renderServices(data.services);
-        }
-    } catch (error) {
-        console.error('Error loading services:', error);
-    }
+    try { const res = await fetch('/api/services'); const data = await res.json(); if (data.success) renderServices(data.services); } catch (e) {}
 }
-
 function renderServices(services) {
-    const grid = document.getElementById('servicesGrid');
-    grid.innerHTML = services.map(service => `
-        <div class="service-card" data-service-id="${service.id}" onclick="selectService(${service.id})">
-            <div class="service-icon">✂️</div>
-            <h3 class="service-name">${service.name}</h3>
-            <p class="service-description">${service.description || ''}</p>
-            <div class="service-details">
-                <span class="service-price">${service.price}₾</span>
-                <span class="service-duration">${service.duration} წთ</span>
+    document.getElementById('servicesGrid').innerHTML = services.map(s => `
+        <div class="service-card p-6 rounded-xl border-2 border-gray-800 hover:border-yellow-600 bg-[#1a1a1a] cursor-pointer transition-all" data-service-id="${s.id}" onclick="selectService(${s.id})">
+            <h3 class="text-white font-bold text-lg mb-1">${s.name}</h3>
+            <div class="flex justify-between text-sm text-gray-400 mt-4 pt-4 border-t border-gray-700">
+                <span class="text-yellow-500 font-bold text-lg">${s.price}₾</span>
+                <span>${s.duration} წთ</span>
             </div>
-        </div>
-    `).join('');
+        </div>`).join('');
 }
-
-function selectService(serviceId) {
-    // Remove previous selection
+function selectService(id) {
+    triggerHaptic();
     document.querySelectorAll('.service-card').forEach(el => el.classList.remove('selected'));
+    document.querySelector(`[data-service-id="${id}"]`).classList.add('selected');
+    bookingState.selectedService = id;
+    bookingState.selectedBarber = null; bookingState.selectedDate = null; bookingState.selectedTime = null;
     
-    // Select new service
-    const card = document.querySelector(`[data-service-id="${serviceId}"]`);
-    card.classList.add('selected');
-    
-    // Save to state
-    bookingState.selectedService = serviceId;
-    
-    // Enable next button
-    document.getElementById('nextToBarber').disabled = false;
+    // Auto advance logic removed per request, waiting for user to click next or rely on design flow. 
+    // But for flow:
+    setTimeout(() => goToStep(3), 300);
 }
 
-// Load Barbers
 async function loadBarbers() {
-    try {
-        const response = await fetch('/api/barbers');
-        const data = await response.json();
-        
-        if (data.success) {
-            renderBarbers(data.barbers);
-        }
-    } catch (error) {
-        console.error('Error loading barbers:', error);
-    }
+    try { const res = await fetch('/api/barbers'); const data = await res.json(); if (data.success) renderBarbers(data.barbers); } catch (e) {}
 }
-
 function renderBarbers(barbers) {
-    const grid = document.getElementById('barbersGrid');
-    grid.innerHTML = barbers.map(barber => `
-        <div class="barber-card" data-barber-id="${barber.id}" onclick="selectBarber(${barber.id})">
-            <div class="barber-avatar">${barber.name.charAt(0)}</div>
-            <h3 class="barber-name">${barber.name}</h3>
-            <p class="barber-specialty">${barber.specialization || ''}</p>
-        </div>
-    `).join('');
+    document.getElementById('barbersGrid').innerHTML = barbers.map(b => {
+        const img = b.image ? `<img src="${b.image}" class="w-full h-full object-cover pointer-events-none">` : `<span class="text-2xl font-bold text-gray-300 pointer-events-none">${b.name[0]}</span>`;
+        return `
+        <div class="barber-card p-4 rounded-xl border-2 border-gray-800 hover:border-yellow-600 bg-[#1a1a1a] cursor-pointer flex flex-col items-center gap-3 transition-all" data-barber-id="${b.id}" onclick="selectBarber(${b.id})">
+            <div class="barber-avatar w-20 h-20 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center border-2 border-gray-600 pointer-events-none relative">
+                ${img}
+                <div class="absolute bottom-1 right-1 w-3.5 h-3.5 bg-green-500 border-2 border-[#1a1a1a] rounded-full z-10"></div>
+            </div>
+            <h3 class="text-white font-bold pointer-events-none text-center">${b.name}</h3>
+        </div>`;
+    }).join('');
 }
-
-function selectBarber(barberId) {
-    // Remove previous selection
+function selectBarber(id) {
+    triggerHaptic();
     document.querySelectorAll('.barber-card').forEach(el => el.classList.remove('selected'));
+    document.querySelector(`[data-barber-id="${id}"]`).classList.add('selected');
+    bookingState.selectedBarber = id;
     
-    // Select new barber
-    const card = document.querySelector(`[data-barber-id="${barberId}"]`);
-    card.classList.add('selected');
-    
-    // Save to state
-    bookingState.selectedBarber = barberId;
-    
-    // Enable next button
-    document.getElementById('nextToDateTime').disabled = false;
+    const btn = document.getElementById('nextToDateTime');
+    if(btn) {
+        btn.disabled = false;
+        btn.classList.remove('cursor-not-allowed', 'bg-gray-700', 'text-gray-400');
+        btn.classList.add('bg-gradient-to-r', 'from-[#B07D4A]', 'to-[#C724B1]', 'text-white');
+    }
 }
 
 // Calendar Functions
@@ -185,287 +178,149 @@ function initializeCalendar() {
 
 function changeMonth(delta) {
     bookingState.currentMonth += delta;
-    
-    if (bookingState.currentMonth < 0) {
-        bookingState.currentMonth = 11;
-        bookingState.currentYear--;
-    } else if (bookingState.currentMonth > 11) {
-        bookingState.currentMonth = 0;
-        bookingState.currentYear++;
-    }
-    
+    if (bookingState.currentMonth < 0) { bookingState.currentMonth = 11; bookingState.currentYear--; }
+    else if (bookingState.currentMonth > 11) { bookingState.currentMonth = 0; bookingState.currentYear++; }
     renderCalendar();
 }
 
+// ✅ განახლებული: Render Calendar + Auto Scroll
 function renderCalendar() {
-    const months = ['იანვარი', 'თებერვალი', 'მარტი', 'აპრილი', 'მაისი', 'ივნისი', 
-                   'ივლისი', 'აგვისტო', 'სექტემბერი', 'ოქტომბერი', 'ნოემბერი', 'დეკემბერი'];
+    const months = ['იანვარი', 'თებერვალი', 'მარტი', 'აპრილი', 'მაისი', 'ივნისი', 'ივლისი', 'აგვისტო', 'სექტემბერი', 'ოქტომბერი', 'ნოემბერი', 'დეკემბერი'];
+    const weekdays = ['კვი', 'ორშ', 'სამ', 'ოთხ', 'ხუთ', 'პარ', 'შაბ'];
+    document.getElementById('calendarTitle').textContent = `${months[bookingState.currentMonth]} ${bookingState.currentYear}`;
     
-    // Update title
-    document.getElementById('calendarTitle').textContent = 
-        `${months[bookingState.currentMonth]} ${bookingState.currentYear}`;
-    
-    // Get first day of month and number of days
     const firstDay = new Date(bookingState.currentYear, bookingState.currentMonth, 1);
     const lastDay = new Date(bookingState.currentYear, bookingState.currentMonth + 1, 0);
     const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1; // Adjust for Monday start
+    const startingDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     let html = '';
+    for (let i = 0; i < startingDay; i++) html += '<div class="calendar-day other-month hidden md:flex"></div>';
     
-    // Empty cells before first day
-    for (let i = 0; i < startingDayOfWeek; i++) {
-        html += '<div class="calendar-day other-month"></div>';
-    }
-    
-    // Days of month
     for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(bookingState.currentYear, bookingState.currentMonth, day);
-        const dateStr = formatDate(date);
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+        const dayName = weekdays[date.getDay()];
         const isToday = date.getTime() === today.getTime();
         const isPast = date < today;
         const isSelected = dateStr === bookingState.selectedDate;
         
-        let classes = 'calendar-day';
-        if (isToday) classes += ' today';
-        if (isPast) classes += ' disabled';
+        let classes = 'calendar-day aspect-square flex flex-col items-center justify-center bg-[#2a2a2a] border border-[#333] rounded-lg cursor-pointer text-sm transition-all min-w-[70px] md:min-w-0 snap-center';
+        if (isToday) classes += ' border-[#B07D4A] text-[#B07D4A] font-bold today'; // დავამატეთ .today კლასი
+        if (isPast) classes += ' opacity-30 cursor-not-allowed pointer-events-none';
         if (isSelected) classes += ' selected';
         
         const onclick = isPast ? '' : `onclick="selectDate('${dateStr}')"`;
-        
-        html += `<div class="${classes}" ${onclick}>${day}</div>`;
+        html += `<div class="${classes}" ${onclick}>
+            <span class="text-[10px] uppercase text-gray-500 mb-1 md:hidden font-bold ${isSelected ? 'text-white/80' : ''}">${dayName}</span>
+            <span class="text-lg">${day}</span>
+        </div>`;
     }
     
-    document.getElementById('calendarDays').innerHTML = html;
-}
+    const container = document.getElementById('calendarDays');
+    container.innerHTML = html;
 
-function formatDate(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    // ✅ AUTO-SCROLL LOGIC (მობილურისთვის)
+    setTimeout(() => {
+        // ვეძებთ არჩეულ დღეს ან დღევანდელ დღეს
+        const target = container.querySelector('.selected') || container.querySelector('.today');
+        
+        if (target && container.scrollWidth > container.clientWidth) {
+            // ვითვლით ცენტრალურ პოზიციას
+            const scrollPos = target.offsetLeft - (container.offsetWidth / 2) + (target.offsetWidth / 2);
+            
+            container.scrollTo({
+                left: scrollPos,
+                behavior: 'smooth'
+            });
+        }
+    }, 100);
 }
 
 async function selectDate(dateStr) {
-    // Update selection
+    triggerHaptic();
     bookingState.selectedDate = dateStr;
     bookingState.selectedTime = null;
-    
-    // Update calendar UI
-    document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('selected'));
-    event.target.classList.add('selected');
-    
-    // Load available slots
+    renderCalendar();
     await loadTimeSlots();
 }
 
 async function loadTimeSlots() {
     const container = document.getElementById('timeSlotsContainer');
     container.style.display = 'block';
-    
-    // Show loading
-    document.getElementById('morningSlots').innerHTML = '<div class="loading-message">იტვირთება...</div>';
+    container.classList.remove('hidden');
+    document.getElementById('morningSlots').innerHTML = '<div class="text-gray-500 text-sm animate-pulse">იტვირთება...</div>';
     document.getElementById('afternoonSlots').innerHTML = '';
     document.getElementById('eveningSlots').innerHTML = '';
     
     try {
-        const url = `/api/available-slots/${bookingState.selectedBarber}/${bookingState.selectedDate}?service_id=${bookingState.selectedService}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        if (data.success && data.is_working) {
-            renderTimeSlots(data.slots);
-        } else {
-            showNoSlotsMessage(data.message || 'ბარბერი არ მუშაობს ამ დღეს');
-        }
-    } catch (error) {
-        console.error('Error loading time slots:', error);
-        showNoSlotsMessage('შეცდომა დროის ჩატვირთვისას');
-    }
+        const res = await fetch(`/api/available-slots/${bookingState.selectedBarber}/${bookingState.selectedDate}?service_id=${bookingState.selectedService}`);
+        const data = await res.json();
+        if (data.success && data.is_working) renderTimeSlots(data.slots);
+        else showNoSlotsMessage(data.message || 'ბარბერი არ მუშაობს');
+    } catch (e) { console.error(e); showNoSlotsMessage('შეცდომა'); }
 }
 
 function renderTimeSlots(slots) {
     const sections = ['morning', 'afternoon', 'evening'];
-    
-    sections.forEach(section => {
-        const sectionEl = document.getElementById(`${section}Section`);
-        const slotsEl = document.getElementById(`${section}Slots`);
-        
-        if (slots[section] && slots[section].length > 0) {
-            sectionEl.style.display = 'block';
-            slotsEl.innerHTML = slots[section].map(time => `
-                <div class="time-slot" onclick="selectTime('${time}')">
-                    ${time}
-                </div>
-            `).join('');
-        } else {
-            sectionEl.style.display = 'none';
-        }
+    let hasSlots = false;
+    sections.forEach(sec => {
+        const div = document.getElementById(`${sec}Section`);
+        const grid = document.getElementById(`${sec}Slots`);
+        if (slots[sec] && slots[sec].length > 0) {
+            hasSlots = true;
+            div.style.display = 'block';
+            grid.innerHTML = slots[sec].map(t => `<div class="time-slot bg-[#2a2a2a] border border-[#333] rounded-lg py-3 text-center text-sm font-medium cursor-pointer hover:border-[#B07D4A] transition-all" onclick="selectTime('${t}')">${t}</div>`).join('');
+        } else { div.style.display = 'none'; }
     });
-    
-    // Check if any slots available
-    const totalSlots = (slots.morning?.length || 0) + 
-                       (slots.afternoon?.length || 0) + 
-                       (slots.evening?.length || 0);
-    
-    if (totalSlots === 0) {
-        showNoSlotsMessage('ამ თარიღზე თავისუფალი დრო არ არის');
-    }
+    if (!hasSlots) showNoSlotsMessage('თავისუფალი დრო არ არის');
 }
 
-function showNoSlotsMessage(message) {
-    document.getElementById('morningSection').style.display = 'none';
-    document.getElementById('afternoonSection').style.display = 'none';
-    document.getElementById('eveningSection').style.display = 'none';
-    document.getElementById('morningSlots').innerHTML = `
-        <div class="no-slots-message">${message}</div>
-    `;
+function showNoSlotsMessage(msg) {
+    ['morning', 'afternoon', 'evening'].forEach(s => document.getElementById(`${s}Section`).style.display = 'none');
     document.getElementById('morningSection').style.display = 'block';
+    document.getElementById('morningSlots').innerHTML = `<div class="text-gray-400 text-sm col-span-3 text-center py-4 border border-dashed border-gray-700 rounded-lg">${msg}</div>`;
 }
 
 function selectTime(time) {
-    // Remove previous selection
+    triggerHaptic();
     document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('selected'));
-    
-    // Select new time
     event.target.classList.add('selected');
-    
-    // Save to state
     bookingState.selectedTime = time;
-    
-    // Enable next button
-    document.getElementById('nextToContact').disabled = false;
-}
-
-// Customer Information
-function validateContactForm() {
-    const name = document.getElementById('customerName').value.trim();
-    const phone = document.getElementById('customerPhone').value.trim();
-    const email = document.getElementById('customerEmail').value.trim();
-    
-    // Clear previous error styling
-    document.getElementById('customerName').style.border = '';
-    document.getElementById('customerPhone').style.border = '';
-    document.getElementById('customerEmail').style.border = '';
-    
-    let isValid = true;
-    let errors = [];
-    
-    // Validate name (must be at least 2 characters)
-    if (!name || name.length < 2) {
-        document.getElementById('customerName').style.border = '2px solid #ef4444';
-        errors.push('• სახელი და გვარი სავალდებულოა (მინიმუმ 2 სიმბოლო)');
-        isValid = false;
-    }
-    
-    // Validate phone (must be 9-12 digits)
-    const cleanedPhone = phone.replace(/[\s-]/g, '');
-    if (!phone || cleanedPhone.length < 9 || cleanedPhone.length > 12) {
-        document.getElementById('customerPhone').style.border = '2px solid #ef4444';
-        errors.push('• ტელეფონის ნომერი სავალდებულოა (9-12 ციფრი)');
-        isValid = false;
-    } else if (!/^[0-9]+$/.test(cleanedPhone)) {
-        document.getElementById('customerPhone').style.border = '2px solid #ef4444';
-        errors.push('• ტელეფონი უნდა შეიცავდეს მხოლოდ ციფრებს');
-        isValid = false;
-    }
-    
-    // Validate email format (if provided)
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        document.getElementById('customerEmail').style.border = '2px solid #ef4444';
-        errors.push('• ელ. ფოსტის ფორმატი არასწორია');
-        isValid = false;
-    }
-    
-    if (!isValid) {
-        // Show error message
-        const errorMessage = 'გთხოვთ შეავსოთ ყველა სავალდებულო ველი:\n\n' + errors.join('\n');
-        alert(errorMessage);
-        
-        // Focus on first invalid field
-        if (!name || name.length < 2) {
-            document.getElementById('customerName').focus();
-        } else if (!phone || cleanedPhone.length < 9) {
-            document.getElementById('customerPhone').focus();
-        }
-    }
-    
-    return isValid;
+    const btn = document.getElementById('nextToConfirmation');
+    btn.disabled = false;
+    btn.classList.remove('cursor-not-allowed', 'bg-gray-700');
+    btn.classList.add('bg-gradient-to-r', 'from-[#B07D4A]', 'to-[#C724B1]', 'text-white');
 }
 
 function collectCustomerInfo() {
-    bookingState.customerInfo = {
-        name: document.getElementById('customerName').value,
-        phone: document.getElementById('customerPhone').value,
-        email: document.getElementById('customerEmail').value,
-        notes: document.getElementById('customerNotes').value
-    };
+    bookingState.customerInfo.notes = document.getElementById('customerNotes').value;
 }
 
-// Confirmation Summary
 function renderConfirmationSummary() {
-    // Get selected data
-    const serviceCard = document.querySelector(`[data-service-id="${bookingState.selectedService}"]`);
-    const barberCard = document.querySelector(`[data-barber-id="${bookingState.selectedBarber}"]`);
+    const sName = document.querySelector(`[data-service-id="${bookingState.selectedService}"] h3`).textContent;
+    const sPrice = document.querySelector(`[data-service-id="${bookingState.selectedService}"] .text-yellow-500`).textContent;
+    const bName = document.querySelector(`[data-barber-id="${bookingState.selectedBarber}"] h3`).textContent;
     
-    const serviceName = serviceCard.querySelector('.service-name').textContent;
-    const servicePrice = serviceCard.querySelector('.service-price').textContent;
-    const barberName = barberCard.querySelector('.barber-name').textContent;
-    
-    const summary = document.getElementById('confirmationSummary');
-    summary.innerHTML = `
-        <div class="summary-item">
-            <span class="summary-label">სერვისი</span>
-            <span class="summary-value">${serviceName}</span>
-        </div>
-        <div class="summary-item">
-            <span class="summary-label">ბარბერი</span>
-            <span class="summary-value">${barberName}</span>
-        </div>
-        <div class="summary-item">
-            <span class="summary-label">თარიღი</span>
-            <span class="summary-value">${bookingState.selectedDate}</span>
-        </div>
-        <div class="summary-item">
-            <span class="summary-label">დრო</span>
-            <span class="summary-value">${bookingState.selectedTime}</span>
-        </div>
-        <div class="summary-item">
-            <span class="summary-label">სახელი</span>
-            <span class="summary-value">${bookingState.customerInfo.name}</span>
-        </div>
-        <div class="summary-item">
-            <span class="summary-label">ტელეფონი</span>
-            <span class="summary-value">${bookingState.customerInfo.phone}</span>
-        </div>
-        ${bookingState.customerInfo.email ? `
-        <div class="summary-item">
-            <span class="summary-label">ელ. ფოსტა</span>
-            <span class="summary-value">${bookingState.customerInfo.email}</span>
-        </div>
-        ` : ''}
-        <div class="summary-total">
-            <span class="summary-total-label">სულ:</span>
-            <span class="summary-total-value">${servicePrice}</span>
-        </div>
+    document.getElementById('confirmationSummary').innerHTML = `
+        <div class="flex justify-between py-3 border-b border-[#333]"><span class="text-gray-500 text-sm font-bold uppercase">სერვისი</span><span class="text-white">${sName}</span></div>
+        <div class="flex justify-between py-3 border-b border-[#333]"><span class="text-gray-500 text-sm font-bold uppercase">ბარბერი</span><span class="text-white">${bName}</span></div>
+        <div class="flex justify-between py-3 border-b border-[#333]"><span class="text-gray-500 text-sm font-bold uppercase">თარიღი</span><span class="text-white">${bookingState.selectedDate}</span></div>
+        <div class="flex justify-between py-3 border-b border-[#333]"><span class="text-gray-500 text-sm font-bold uppercase">დრო</span><span class="text-white font-mono">${bookingState.selectedTime}</span></div>
+        <div class="flex justify-between py-4 mt-2"><span class="text-gray-400 font-bold text-lg">სულ გადასახდელი</span><span class="text-[#B07D4A] font-bold text-2xl">${sPrice}</span></div>
     `;
 }
 
-// Submit Booking
 async function submitBooking() {
     const btn = document.getElementById('confirmBooking');
-    btn.disabled = true;
-    btn.textContent = 'იტვირთება...';
-    
+    btn.disabled = true; btn.textContent = 'იტვირთება...';
     try {
-        const response = await fetch('/api/bookings/create', {
+        const res = await fetch('/api/bookings/create', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 service_id: bookingState.selectedService,
                 barber_id: bookingState.selectedBarber,
@@ -477,21 +332,8 @@ async function submitBooking() {
                 notes: bookingState.customerInfo.notes
             })
         });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Redirect to success page
-            window.location.href = `/booking/success/${data.booking_id}`;
-        } else {
-            alert('შეცდომა: ' + data.error);
-            btn.disabled = false;
-            btn.textContent = 'დადასტურება ✓';
-        }
-    } catch (error) {
-        console.error('Error submitting booking:', error);
-        alert('შეცდომა ჯავშნის შექმნისას');
-        btn.disabled = false;
-        btn.textContent = 'დადასტურება ✓';
-    }
+        const data = await res.json();
+        if(data.success) window.location.href = `/booking/success/${data.booking_id}`;
+        else { alert(data.error); btn.disabled=false; btn.textContent='დადასტურება ✓'; }
+    } catch (e) { console.error(e); alert('შეცდომა'); btn.disabled=false; btn.textContent='დადასტურება ✓'; }
 }

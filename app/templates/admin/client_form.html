@@ -1,0 +1,63 @@
+{% extends "admin/base_admin.html" %}
+
+{% block page_title %}კლიენტის რედაქტირება{% endblock %}
+
+{% block content %}
+<div class="container mx-auto max-w-2xl">
+    <div class="bg-[#1a1a1a] rounded-xl border border-gray-800 shadow-lg overflow-hidden">
+        
+        <div class="p-6 border-b border-gray-800 flex justify-between items-center">
+            <h2 class="text-xl font-bold text-white">კლიენტის პროფილი</h2>
+            <a href="{{ url_for('admin.clients') }}" class="text-gray-500 hover:text-white transition-colors text-sm">უკან</a>
+        </div>
+
+        <form method="POST" class="p-6 space-y-6">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase mb-2">სახელი</label>
+                    <input type="text" name="name" value="{{ client.name }}" required
+                           class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2.5 focus:ring-yellow-600 focus:border-yellow-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase mb-2">ტელეფონი</label>
+                    <input type="text" value="{{ client.phone }}" disabled
+                           class="w-full bg-gray-800 border border-gray-700 text-gray-400 rounded-lg px-4 py-2.5 cursor-not-allowed">
+                    <p class="text-xs text-gray-600 mt-1">ნომრის შეცვლა შეუძლებელია</p>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-500 uppercase mb-2">ელ. ფოსტა</label>
+                <input type="email" name="email" value="{{ client.email or '' }}"
+                       class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2.5 focus:ring-yellow-600 focus:border-yellow-600">
+            </div>
+
+            <div>
+                <label class="block text-xs font-medium text-gray-500 uppercase mb-2">შენიშვნები (მხოლოდ ადმინისთვის)</label>
+                <textarea name="notes" rows="3" placeholder="მაგ: ალერგიულია, სულ აგვიანებს..."
+                          class="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2.5 focus:ring-yellow-600 focus:border-yellow-600">{{ client.notes or '' }}</textarea>
+            </div>
+
+            <div class="bg-red-900/10 border border-red-900/30 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                    <h3 class="text-red-400 font-bold text-sm">კლიენტის დაბლოკვა</h3>
+                    <p class="text-red-400/60 text-xs mt-1">დაბლოკილი კლიენტი ვეღარ შეძლებს ჯავშნის გაკეთებას.</p>
+                </div>
+                
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="is_blocked" class="sr-only peer" {% if client.is_blocked %}checked{% endif %}>
+                    <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600"></div>
+                </label>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <button type="submit" class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg">
+                    💾 შენახვა
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

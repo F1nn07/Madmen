@@ -1,95 +1,177 @@
-// FullCalendar.js Integration for BarberFlow Admin Panel
-// Complete Responsive Implementation (Mobile + Desktop)
-
-// ⚠️ ADMIN PREFIX CONFIGURATION
 const ADMIN_PREFIX = '/madmen-secure-admin-2024';
-
 let calendar;
-let currentBarberFilter = 'all';
-let currentBookingId = null;
-
-// 📱 RESPONSIVE DETECTION
 const isMobile = () => window.innerWidth < 768;
 
-// Initialize on page load
+// 🎨 ბარბერების ფერები
+const barberColors = {
+    1: '#3b82f6',  // ლურჯი
+    2: '#8b5cf6',  // იისფერი
+    3: '#ec4899',  // ვარდისფერი
+    4: '#f59e0b',  // ნარინჯისფერი
+    5: '#10b981',  // მწვანე
+    6: '#ef4444'   // წითელი
+};
+
+function getBarberColor(barberId) {
+    return barberColors[barberId] || '#6b7280';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeCalendar();
     setupEventListeners();
-    setupResponsiveHandler();
+    
+    if (isMobile()) {
+        setupMobileGestures();
+    }
+    
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            calendar.destroy();
+            initializeCalendar();
+            if (isMobile()) {
+                setupMobileGestures();
+            }
+        }, 300);
+    });
 });
 
-// ====================
-// CALENDAR INITIALIZATION (RESPONSIVE)
-// ====================
+// 📱 Mobile Swipe Gestures
+function setupMobileGestures() {
+    const calendarEl = document.getElementById('booking-calendar');
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    calendarEl.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+    
+    calendarEl.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+    
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartX - touchEndX;
+        
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0) {
+                calendar.next();
+                updateGeorgianTitle();
+            } else {
+                calendar.prev();
+                updateGeorgianTitle();
+            }
+        }
+    }
+}
+
+// ✅ ქართული თარიღების ფორმატირება
+function updateGeorgianTitle() {
+    const monthNames = ['იანვარი', 'თებერვალი', 'მარტი', 'აპრილი', 'მაისი', 'ივნისი', 'ივლისი', 'აგვისტო', 'სექტემბერი', 'ოქტომბერი', 'ნოემბერი', 'დეკემბერი'];
+    const dayNamesShort = ['კვი', 'ორშ', 'სამ', 'ოთხ', 'ხუთ', 'პარ', 'შაბ'];
+    const dayNamesFull = ['კვირა', 'ორშაბათი', 'სამშაბათი', 'ოთხშაბათი', 'ხუთშაბათი', 'პარასკევი', 'შაბათი'];
+    
+    const titleEl = document.querySelector('.fc-toolbar-title');
+    if (titleEl) {
+        titleEl.style.opacity = '0';
+    }
+    
+    setTimeout(() => {
+        if (titleEl && calendar) {
+            const view = calendar.view;
+            const currentDate = view.currentStart;
+            const endDate = view.currentEnd;
+            
+            if (view.type === 'resourceTimeGridDay' || view.type === 'timeGridDay') {
+                const day = currentDate.getDate();
+                const month = monthNames[currentDate.getMonth()];
+                const year = currentDate.getFullYear();
+                const weekday = dayNamesFull[currentDate.getDay()];
+                titleEl.textContent = `${day} ${month}, ${year}, ${weekday}`;
+            } else if (view.type === 'timeGridWeek') {
+                const startDay = currentDate.getDate();
+                const endDay = new Date(endDate.getTime() - 86400000).getDate();
+                const month = monthNames[currentDate.getMonth()];
+                const year = currentDate.getFullYear();
+                titleEl.textContent = `${startDay}-${endDay} ${month}, ${year}`;
+            } else if (view.type === 'dayGridMonth') {
+                const month = monthNames[currentDate.getMonth()];
+                const year = currentDate.getFullYear();
+                titleEl.textContent = `${month} ${year}`;
+            }
+            
+            titleEl.style.transition = 'opacity 0.2s ease';
+            titleEl.style.opacity = '1';
+        }
+        
+        // Day Headers ფორმატირება
+        document.querySelectorAll('.fc-col-header-cell-cushion').forEach(header => {
+            const text = header.textContent.trim();
+            const match = text.match(/(\d+)/);
+            if (match) {
+                const dayNum = match[1];
+                const dateStr = header.closest('.fc-col-header-cell').getAttribute('data-date');
+                if (dateStr) {
+                    const date = new Date(dateStr);
+                    const georgianDay = dayNamesShort[date.getDay()];
+                    header.textContent = `${dayNum} ${georgianDay}`;
+                }
+            }
+        });
+        
+        // dayGridMonth view-ის სათაურები
+        if (calendar.view.type === 'dayGridMonth') {
+            const dayHeaders = document.querySelectorAll('.fc-col-header-cell');
+            dayHeaders.forEach((cell, index) => {
+                const inner = cell.querySelector('.fc-scrollgrid-sync-inner, .fc-col-header-cell-cushion');
+                if (inner) {
+                    const dayIndex = (index + 1) % 7;
+                    inner.textContent = dayNamesShort[dayIndex];
+                }
+            });
+        }
+    }, 10);
+}
+
 function initializeCalendar() {
     const calendarEl = document.getElementById('booking-calendar');
     const mobile = isMobile();
     
     calendar = new FullCalendar.Calendar(calendarEl, {
-        // 📱 RESPONSIVE INITIAL VIEW
-        initialView: mobile ? 'timeGridDay' : 'timeGridWeek',
+        // ✅ Desktop: Resources View, Mobile: Simple Day View
+        initialView: mobile ? 'timeGridDay' : 'resourceTimeGridDay',
         
-        // 📱 RESPONSIVE HEADER TOOLBAR
+        // ✅ Scheduler License Key
+        schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
+        
         headerToolbar: {
-            left: 'prev,next today',
+            left: mobile ? 'prev,next' : 'prev,next today',
             center: 'title',
-            right: mobile 
-                ? 'timeGridDay,dayGridMonth'  // Mobile: დღე, თვე
-                : 'dayGridMonth,timeGridWeek,timeGridDay'  // Desktop: თვე, კვირა, დღე
+            right: mobile ? 'timeGridDay' : 'resourceTimeGridDay,timeGridWeek,timeGridDay,dayGridMonth'
         },
         
-        // 📱 RESPONSIVE BUTTON TEXT
+        // ✅ ქართული ლოკალიზაცია (FullCalendar v6 syntax)
+        locale: 'ka',
         buttonText: {
+            prev: 'უკან',
+            next: 'წინ',
             today: 'დღეს',
             month: 'თვე',
             week: 'კვირა',
             day: 'დღე'
         },
         
-        // Georgian locale
-        locale: 'ka',
-        firstDay: 1, // Monday
-        
-        // Time settings
+        firstDay: 1, // ორშაბათი
         slotMinTime: '09:00:00',
         slotMaxTime: '21:00:00',
-        slotDuration: '00:30:00',
+        slotDuration: '00:15:00',
         slotLabelInterval: '01:00',
-        allDaySlot: false,
-        
-        // 📱 RESPONSIVE DISPLAY SETTINGS
         height: 'auto',
         expandRows: true,
         nowIndicator: true,
-        
-        // 🎯 MONTH VIEW OPTIMIZATION - Show only 2-3 events + "+X more"
-        dayMaxEvents: mobile ? 2 : 3,
-        moreLinkText: function(num) {
-            return '+' + num + ' სხვა';
-        },
-        
-        // 📱 RESPONSIVE VIEW SETTINGS
-        views: {
-            timeGridDay: {
-                slotLabelFormat: {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false
-                }
-            },
-            timeGridWeek: {
-                dayHeaderFormat: mobile 
-                    ? { weekday: 'short', day: 'numeric' }
-                    : { weekday: 'short', day: 'numeric', month: 'short' }
-            }
-        },
-        
-        // Time format
-        eventTimeFormat: {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        },
         
         slotLabelFormat: {
             hour: '2-digit',
@@ -97,646 +179,372 @@ function initializeCalendar() {
             hour12: false
         },
         
-        // Event source - fetch from API
-        events: function(info, successCallback, failureCallback) {
-            const url = buildEventsUrl(info.startStr, info.endStr);
-            
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('API request failed');
-                    }
-                    return response.json();
+        eventTimeFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        },
+        
+        // ✅ Resources (ბარბერები) ჩატვირთვა
+        resources: function(fetchInfo, successCallback, failureCallback) {
+            fetch('/api/barbers')
+                .then(res => {
+                    if (!res.ok) throw new Error('Network error');
+                    return res.json();
                 })
                 .then(data => {
-                    console.log('📅 Loaded events:', data.length);
-                    successCallback(data);
+                    if (data.success && data.barbers) {
+                        const resources = data.barbers.map(barber => ({
+                            id: barber.id.toString(),
+                            title: barber.name,
+                            eventColor: getBarberColor(barber.id)
+                        }));
+                        successCallback(resources);
+                    } else {
+                        console.error('Barbers API error:', data);
+                        successCallback([]); // Empty array if fails
+                    }
                 })
-                .catch(error => {
-                    console.error('❌ Error loading events:', error);
-                    showNotification('შეცდომა ჯავშნების ჩატვირთვისას', 'error');
-                    failureCallback(error);
+                .catch(err => {
+                    console.error('Error loading barbers:', err);
+                    successCallback([]); // Empty array if fails
                 });
         },
         
-        // ====================
-        // INTERACTIONS
-        // ====================
+        // ✅ Resource Label Configuration
+        resourceAreaHeaderContent: '✂️ ბარბერები',
+        resourceAreaWidth: '180px',
         
-        // ინტერაქცია (1) - არსებულ ჯავშანზე დაკლიკება
+        // ✅ Events (ჯავშნები) ჩატვირთვა
+        events: function(fetchInfo, successCallback, failureCallback) {
+            const url = buildEventsUrl(
+                fetchInfo.start.toISOString(),
+                fetchInfo.end.toISOString()
+            );
+            
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    console.log('📊 Events API Response:', data);
+                    
+                    // ✅ Support ორივე format: Array ან {success, events}
+                    let events = [];
+                    
+                    if (Array.isArray(data)) {
+                        // Format 1: პირდაპირ Array
+                        events = data;
+                        console.log('✅ Direct array format:', events.length, 'events');
+                    } else if (data.success && data.events) {
+                        // Format 2: {success: true, events: [...]}
+                        events = data.events;
+                        console.log('✅ Object format:', events.length, 'events');
+                    } else {
+                        console.error('❌ Unknown format:', data);
+                        failureCallback('Invalid response format');
+                        return;
+                    }
+                    
+                    // ✅ თითოეულ event-ს ვუმატებთ resourceId-ს
+                    const processedEvents = events.map(event => ({
+                        ...event,
+                        resourceId: event.barber_id ? event.barber_id.toString() : null
+                    }));
+                    
+                    console.log('✅ Processed events:', processedEvents.length);
+                    successCallback(processedEvents);
+                    setTimeout(updateGeorgianTitle, 50);
+                })
+                .catch(err => {
+                    console.error('Events fetch error:', err);
+                    failureCallback(err);
+                });
+        },
+        
+        dateClick: function(info) {
+            const barberId = info.resource ? info.resource.id : null;
+            showCreateBookingModal(info.dateStr, barberId);
+        },
+        
         eventClick: function(info) {
             info.jsEvent.preventDefault();
             showEventDetailsModal(info.event);
         },
         
-        // ინტერაქცია (2) - ცარიელ ადგილზე დაკლიკება
-        dateClick: function(info) {
-            const view = calendar.view.type;
-            
-            if (view === 'timeGridWeek' || view === 'timeGridDay') {
-                showCreateBookingModal(info.dateStr, info.date);
-            } else if (view === 'dayGridMonth') {
-                calendar.changeView('timeGridDay', info.dateStr);
-            }
-        },
+        editable: !mobile,
+        eventDrop: handleEventDrop,
+        eventResize: handleEventResize,
         
-        // 🎯 DRAG & DROP
-        // Desktop: ყველგან ჩართულია
-        // Mobile: მხოლოდ დღის ხედში
-        editable: !mobile || calendar?.view?.type === 'timeGridDay',
-        droppable: false,
-        eventDurationEditable: !mobile || calendar?.view?.type === 'timeGridDay',
-        
-        // Drag & Drop callbacks
-        eventDrop: function(info) {
-            handleEventDrop(info);
-        },
-        
-        eventResize: function(info) {
-            handleEventResize(info);
-        },
-        
-        // 📱 VIEW CHANGE HANDLER - Update drag/drop based on view
-        viewDidMount: function(info) {
-            const mobile = isMobile();
-            const view = info.view.type;
-            
-            // Desktop: ყველა time view-ში editable
-            // Mobile: მხოლოდ დღის ხედში editable
-            const shouldBeEditable = mobile 
-                ? (view === 'timeGridDay')  // მობილურზე მხოლოდ დღის ხედში
-                : (view === 'timeGridWeek' || view === 'timeGridDay');  // დესკტოპზე კვირა და დღე
-            
-            calendar.setOption('editable', shouldBeEditable);
-            calendar.setOption('eventDurationEditable', shouldBeEditable);
-            
-            console.log(`📱 View: ${view}, Mobile: ${mobile}, Editable: ${shouldBeEditable}`);
-            
-            // Update drag hint visibility
-            updateDragHintVisibility(view, mobile);
-        },
-        
-        // Event styling
-        eventDidMount: function(info) {
-            const status = info.event.extendedProps.status;
-            const statusText = getStatusLabel(status);
-            const barber = info.event.extendedProps.barberName || '';
-            const customer = info.event.extendedProps.customerName || '';
-            
-            info.el.title = `${customer}\n${barber}\n${statusText}`;
-        },
-        
-        // Loading indicator
-        loading: function(isLoading) {
-            const loader = document.getElementById('calendar-loader');
-            if (loader) {
-                loader.style.display = isLoading ? 'block' : 'none';
-            }
+        datesSet: function() {
+            updateGeorgianTitle();
         }
     });
     
     calendar.render();
 }
 
-// 📱 RESPONSIVE HANDLER - Reload calendar on screen resize
-function setupResponsiveHandler() {
-    let resizeTimer;
-    let wasMobile = isMobile();
-    
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(function() {
-            const isNowMobile = isMobile();
-            
-            if (wasMobile !== isNowMobile) {
-                console.log('📱 Screen size changed, reloading calendar...');
-                wasMobile = isNowMobile;
-                
-                if (calendar) {
-                    calendar.destroy();
-                }
-                initializeCalendar();
-                
-                showNotification(
-                    isNowMobile 
-                        ? 'მობილურ რეჟიმზე გადავიდა' 
-                        : 'დესკტოპ რეჟიმზე გადავიდა',
-                    'info'
-                );
-            }
-        }, 250);
-    });
-}
-
-// Update drag hint visibility based on view and device
-function updateDragHintVisibility(view, mobile) {
-    const dragHint = document.getElementById('dragDropHint');
-    if (!dragHint) return;
-    
-    // Show hint if:
-    // - Desktop + time view OR
-    // - Mobile + day view
-    const shouldShow = mobile 
-        ? (view === 'timeGridDay')
-        : (view === 'timeGridWeek' || view === 'timeGridDay');
-    
-    dragHint.style.display = shouldShow ? 'flex' : 'none';
-}
-
-// Build API URL with filters
 function buildEventsUrl(start, end) {
+    // ✅ სწორი URL: /api/admin/all-bookings (არა /madmen-secure-admin-2024/api/all-bookings)
     let url = `/api/admin/all-bookings?start=${start}&end=${end}`;
-    
-    if (currentBarberFilter !== 'all') {
-        url += `&barber_id=${currentBarberFilter}`;
+    const filter = document.getElementById('barberFilter');
+    if (filter && filter.value !== 'all') {
+        url += `&barber_id=${filter.value}`;
     }
-    
     return url;
 }
 
-// ====================
-// EVENT LISTENERS
-// ====================
 function setupEventListeners() {
-    // Barber filter
-    const barberFilter = document.getElementById('barberFilter');
-    if (barberFilter) {
-        barberFilter.addEventListener('change', function() {
-            currentBarberFilter = this.value;
-            calendar.refetchEvents();
-        });
+    const filter = document.getElementById('barberFilter');
+    if(filter) {
+        filter.addEventListener('change', () => calendar.refetchEvents());
     }
     
-    // Modal close
     document.querySelectorAll('.modal-overlay').forEach(modal => {
         modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeAllModals();
-            }
+            if (e.target === this) closeAllModals();
         });
     });
     
-    // Escape key - close modals only (sidebar is handled globally)
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeAllModals();
-        }
+        if (e.key === 'Escape') closeAllModals();
     });
 }
 
 // ====================
-// MODAL: EVENT DETAILS (გამარტივებული - БЕЗ სტატუსის შეცვლის)
+// MODALS
 // ====================
 function showEventDetailsModal(event) {
-    currentBookingId = event.id;
     const props = event.extendedProps;
     
-    // Format date and time
     const startDate = new Date(event.start);
     const endDate = new Date(event.end);
-    
-    const dateStr = startDate.toLocaleDateString('ka-GE', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        weekday: 'long'
+    const dateStr = startDate.toLocaleDateString('ka-GE', { 
+        weekday: 'long', 
+        month: 'long', 
+        day: 'numeric' 
     });
-    
-    const timeStr = `${startDate.toLocaleTimeString('ka-GE', {
-        hour: '2-digit',
-        minute: '2-digit'
-    })} - ${endDate.toLocaleTimeString('ka-GE', {
-        hour: '2-digit',
-        minute: '2-digit'
+    const timeStr = `${startDate.toLocaleTimeString('ka-GE', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
+    })} - ${endDate.toLocaleTimeString('ka-GE', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: false 
     })}`;
     
-    const statusText = getStatusLabel(props.status);
+    const statusColors = {
+        'pending': '#f59e0b',
+        'confirmed': '#10b981',
+        'completed': '#3b82f6',
+        'cancelled': '#ef4444',
+        'no-show': '#6b7280'
+    };
     
-    // Build modal content (БЕЗ status buttons)
-    const modalBody = document.getElementById('detailsModalBody');
-    modalBody.innerHTML = `
-        <div class="detail-row">
-            <span class="detail-label">ჯავშნის ID:</span>
-            <span class="detail-value">#${event.id}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">კლიენტი:</span>
-            <span class="detail-value">${props.customerName}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">ტელეფონი:</span>
-            <span class="detail-value">${props.customerPhone || 'N/A'}</span>
-        </div>
-        ${props.customerEmail ? `
-        <div class="detail-row">
-            <span class="detail-label">ელ. ფოსტა:</span>
-            <span class="detail-value">${props.customerEmail}</span>
-        </div>
-        ` : ''}
-        <div class="detail-row">
-            <span class="detail-label">სერვისი:</span>
-            <span class="detail-value">${props.serviceName}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">ფასი:</span>
-            <span class="detail-value">${props.servicePrice}₾</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">ხანგრძლივობა:</span>
-            <span class="detail-value">${props.serviceDuration} წუთი</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">ბარბერი:</span>
-            <span class="detail-value">${props.barberName}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">თარიღი:</span>
-            <span class="detail-value">${dateStr}</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">დრო:</span>
-            <span class="detail-value">${timeStr}</span>
-        </div>
-        ${props.notes ? `
-        <div class="detail-row">
-            <span class="detail-label">შენიშვნები:</span>
-            <span class="detail-value">${props.notes}</span>
-        </div>
-        ` : ''}
-        <div class="detail-row">
-            <span class="detail-label">სტატუსი:</span>
-            <span class="detail-value status-badge status-${props.status}">${statusText}</span>
-        </div>
-        ${props.confirmationCode ? `
-        <div class="detail-row">
-            <span class="detail-label">დადასტურების კოდი:</span>
-            <span class="detail-value">${props.confirmationCode}</span>
-        </div>
-        ` : ''}
-        
-        <div class="modal-actions">
-            <button class="btn-modal btn-edit" onclick="editBooking(${event.id})">
-                ✏️ რედაქტირება
-            </button>
-            <button class="btn-modal btn-delete" onclick="deleteBooking(${event.id})">
-                🗑️ წაშლა
-            </button>
-            <button class="btn-modal" onclick="closeAllModals()">
-                დახურვა
-            </button>
-        </div>
-    `;
+    const statusEmojis = {
+        'pending': '⏳',
+        'confirmed': '✅',
+        'completed': '🎉',
+        'cancelled': '❌',
+        'no-show': '👻'
+    };
     
-    document.getElementById('eventDetailsModal').classList.add('active');
-}
-
-// ====================
-// MODAL: CREATE/EDIT BOOKING
-// ====================
-async function showCreateBookingModal(dateStr, dateObj) {
-    const modalBody = document.getElementById('createModalBody');
-    
-    const date = dateStr.split('T')[0];
-    const time = dateStr.split('T')[1]?.substring(0, 5) || '10:00';
-    
-    try {
-        const response = await fetch(`${ADMIN_PREFIX}/bookings/new?date=${date}&time=${time}`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to load form');
-        }
-        
-        const html = await response.text();
-        modalBody.innerHTML = html;
-        
-        const form = document.getElementById('bookingForm');
-        if (form) {
-            form.onsubmit = handleCreateBooking;
-        }
-        
-        document.getElementById('createBookingModal').classList.add('active');
-    } catch (error) {
-        console.error('Error loading create form:', error);
-        showNotification('შეცდომა ფორმის ჩატვირთვისას', 'error');
-    }
-}
-
-async function showEditBookingModal(bookingId) {
-    const modalBody = document.getElementById('createModalBody');
-    
-    try {
-        const response = await fetch(`${ADMIN_PREFIX}/bookings/edit/${bookingId}`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to load form');
-        }
-        
-        const html = await response.text();
-        modalBody.innerHTML = html;
-        
-        const form = document.getElementById('bookingForm');
-        if (form) {
-            form.onsubmit = (e) => handleEditBooking(e, bookingId);
-        }
-        
-        document.querySelector('#createBookingModal .modal-title').textContent = 'ჯავშნის რედაქტირება';
-        document.getElementById('createBookingModal').classList.add('active');
-    } catch (error) {
-        console.error('Error loading edit form:', error);
-        showNotification('შეცდომა ფორმის ჩატვირთვისას', 'error');
-    }
-}
-
-// ====================
-// API CALLS
-// ====================
-
-// 🎯 DRAG & DROP: Handle event drop
-async function handleEventDrop(info) {
-    const event = info.event;
-    const newStart = event.start;
-    const newEnd = event.end;
-    
-    try {
-        const response = await fetch(`/api/admin/bookings/${event.id}/update-datetime`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                start_time: newStart.toISOString(),
-                end_time: newEnd.toISOString()
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification('ჯავშანი წარმატებით გადატანილი!', 'success');
-            calendar.refetchEvents();
-        } else {
-            info.revert();
-            showNotification('შეცდომა: ' + (data.error || 'დროის შეცვლა ვერ მოხერხდა'), 'error');
-        }
-    } catch (error) {
-        console.error('Error moving booking:', error);
-        info.revert();
-        showNotification('შეცდომა ჯავშნის გადატანისას', 'error');
-    }
-}
-
-// 🎯 RESIZE: Handle event resize
-async function handleEventResize(info) {
-    const event = info.event;
-    const newEnd = event.end;
-    
-    try {
-        const response = await fetch(`/api/admin/bookings/${event.id}/update-datetime`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                start_time: event.start.toISOString(),
-                end_time: newEnd.toISOString()
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification('ხანგრძლივობა შეიცვალა!', 'success');
-            calendar.refetchEvents();
-        } else {
-            info.revert();
-            showNotification('შეცდომა: ' + (data.error || 'ხანგრძლივობის შეცვლა ვერ მოხერხდა'), 'error');
-        }
-    } catch (error) {
-        console.error('Error resizing booking:', error);
-        info.revert();
-        showNotification('შეცდომა', 'error');
-    }
-}
-
-// Create new booking
-async function handleCreateBooking(event) {
-    event.preventDefault();
-    
-    const form = event.target;
-    const formData = new FormData(form);
-    const submitBtn = form.querySelector('button[type="submit"]');
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span>ჩატვირთვა...</span>';
-    
-    clearFormErrors();
-    
-    try {
-        const response = await fetch(`${ADMIN_PREFIX}/bookings/new`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification(data.message || 'ჯავშანი წარმატებით შეიქმნა!', 'success');
-            calendar.refetchEvents();
-            closeBookingModal();
-        } else {
-            if (data.errors) {
-                displayFormErrors(data.errors);
-            } else {
-                showNotification(data.error || 'შეცდომა', 'error');
-            }
-        }
-    } catch (error) {
-        console.error('Error creating booking:', error);
-        showNotification('შეცდომა ჯავშნის შექმნისას', 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            <span>შენახვა</span>
-        `;
-    }
-    
-    return false;
-}
-
-// Edit existing booking
-async function handleEditBooking(event, bookingId) {
-    event.preventDefault();
-    
-    const form = event.target;
-    const formData = new FormData(form);
-    const submitBtn = form.querySelector('button[type="submit"]');
-    
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span>ჩატვირთვა...</span>';
-    
-    clearFormErrors();
-    
-    try {
-        const response = await fetch(`${ADMIN_PREFIX}/bookings/edit/${bookingId}`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification(data.message || 'ჯავშანი წარმატებით განახლდა!', 'success');
-            calendar.refetchEvents();
-            closeBookingModal();
-        } else {
-            if (data.errors) {
-                displayFormErrors(data.errors);
-            } else {
-                showNotification(data.error || 'შეცდომა', 'error');
-            }
-        }
-    } catch (error) {
-        console.error('Error updating booking:', error);
-        showNotification('შეცდომა ჯავშნის განახლებისას', 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = `
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            <span>განახლება</span>
-        `;
-    }
-    
-    return false;
-}
-
-// Edit booking
-function editBooking(bookingId) {
-    closeAllModals();
-    setTimeout(() => showEditBookingModal(bookingId), 300);
-}
-
-// Delete booking
-async function deleteBooking(bookingId) {
-    if (!confirm('დარწმუნებული ხართ რომ გსურთ ამ ჯავშნის წაშლა?')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`${ADMIN_PREFIX}/bookings/delete/${bookingId}`, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            showNotification(data.message || 'ჯავშანი წაშლილია!', 'success');
-            calendar.refetchEvents();
-            closeAllModals();
-        } else {
-            showNotification(data.error || 'შეცდომა წაშლისას', 'error');
-        }
-    } catch (error) {
-        console.error('Error deleting booking:', error);
-        showNotification('შეცდომა წაშლისას', 'error');
-    }
-}
-
-// ====================
-// FORM UTILITIES
-// ====================
-function clearFormErrors() {
-    document.querySelectorAll('.form-error').forEach(el => {
-        el.textContent = '';
-    });
-    document.querySelectorAll('.form-input, .form-select, .form-textarea').forEach(el => {
-        el.style.borderColor = '';
-    });
-}
-
-function displayFormErrors(errors) {
-    for (const [field, message] of Object.entries(errors)) {
-        const errorEl = document.getElementById(`error-${field}`);
-        const inputEl = document.querySelector(`[name="${field}"]`);
-        
-        if (errorEl) {
-            errorEl.textContent = message;
-        }
-        
-        if (inputEl) {
-            inputEl.style.borderColor = '#ef4444';
-            inputEl.focus();
-        }
-    }
-}
-
-function closeBookingModal() {
-    document.getElementById('createBookingModal').classList.remove('active');
-    document.querySelector('#createBookingModal .modal-title').textContent = 'ახალი ჯავშნის შექმნა';
-}
-
-// ====================
-// UTILITY FUNCTIONS
-// ====================
-function getStatusLabel(status) {
-    const labels = {
+    const statusNames = {
         'pending': 'მოლოდინში',
         'confirmed': 'დადასტურებული',
         'completed': 'დასრულებული',
-        'cancelled': 'გაუქმებული'
+        'cancelled': 'გაუქმებული',
+        'no-show': 'არ გამოცხადდა'
     };
-    return labels[status] || status;
+    
+    const modalContent = `
+        <div style="background: linear-gradient(135deg, rgba(20,20,30,0.95) 0%, rgba(30,30,45,0.95) 100%); backdrop-filter: blur(20px); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); max-width: 500px; margin: 0 auto;">
+            <div style="padding: 24px 24px 20px 24px; background: linear-gradient(135deg, rgba(176, 125, 74, 0.15) 0%, rgba(176, 125, 74, 0.05) 100%); border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                    <h2 style="color: white; font-size: 24px; font-weight: 800; margin: 0;">📋 ჯავშნის დეტალები</h2>
+                    <button onclick="closeAllModals()" style="background: rgba(255,255,255,0.1); border: none; width: 36px; height: 36px; border-radius: 50%; color: white; font-size: 20px; cursor: pointer;">✕</button>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="display: inline-block; padding: 8px 16px; background: ${statusColors[props.status] || '#6b7280'}; color: white; border-radius: 10px; font-weight: 700; font-size: 12px; text-transform: uppercase;">
+                        ${statusEmojis[props.status] || '⚪'} ${statusNames[props.status] || props.status}
+                    </span>
+                    <span style="color: #888; font-size: 12px; font-weight: 600;">ID: ${event.id}</span>
+                </div>
+            </div>
+            
+            <div style="padding: 24px;">
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 16px; margin-bottom: 16px;">
+                    <div style="color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">👤 კლიენტი</div>
+                    <div style="color: white; font-weight: 700; font-size: 16px; margin-bottom: 6px;">${props.customerName || 'უცნობი'}</div>
+                    <div style="color: #888; font-size: 13px;">📞 ${props.customerPhone || 'არ არის მითითებული'}</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 16px;">
+                        <div style="color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">✂️ სერვისი</div>
+                        <div style="color: white; font-weight: 600; font-size: 14px;">${props.serviceName}</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 16px;">
+                        <div style="color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">👨‍💼 ბარბერი</div>
+                        <div style="color: white; font-weight: 600; font-size: 14px;">${props.barberName}</div>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 16px; margin-bottom: 16px;">
+                    <div style="color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">🕐 დრო</div>
+                    <div style="color: white; font-weight: 600; font-size: 14px; margin-bottom: 4px;">${dateStr}</div>
+                    <div style="color: #B07D4A; font-family: monospace; font-size: 16px; font-weight: 700;">${timeStr}</div>
+                </div>
+                
+                ${props.notes ? `
+                    <div style="background: rgba(176, 125, 74, 0.1); border: 1px solid rgba(176, 125, 74, 0.2); border-radius: 14px; padding: 16px;">
+                        <div style="color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">💬 შენიშვნა</div>
+                        <div style="color: #ccc; font-size: 14px; font-style: italic; line-height: 1.6;">"${props.notes}"</div>
+                    </div>
+                ` : ''}
+            </div>
+            
+            <div style="padding: 20px 24px; background: rgba(0,0,0,0.2); border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px;">
+                <button onclick="editBooking(${event.id})" style="flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 14px;">
+                    ✏️ რედაქტირება
+                </button>
+                <button onclick="deleteBooking(${event.id})" style="flex: 1; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 14px;">
+                    🗑️ წაშლა
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('detailsModalBody').innerHTML = modalContent;
+    document.getElementById('eventDetailsModal').classList.remove('hidden');
 }
 
 function closeAllModals() {
     document.querySelectorAll('.modal-overlay').forEach(modal => {
-        modal.classList.remove('active');
+        modal.classList.add('hidden');
     });
-    currentBookingId = null;
-    
-    const createModalTitle = document.querySelector('#createBookingModal .modal-title');
-    if (createModalTitle) {
-        createModalTitle.textContent = 'ახალი ჯავშნის შექმნა';
+}
+
+// ====================
+// CRUD OPERATIONS
+// ====================
+async function handleEventDrop(info) {
+    updateBookingTime(info.event.id, info.event.start, info.event.end, info);
+}
+
+async function handleEventResize(info) {
+    updateBookingTime(info.event.id, info.event.start, info.event.end, info);
+}
+
+async function updateBookingTime(id, start, end, info) {
+    try {
+        const res = await fetch(`${ADMIN_PREFIX}/api/bookings/${id}/update-datetime`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                start_time: start.toISOString(), 
+                end_time: end.toISOString() 
+            })
+        });
+        const data = await res.json();
+        
+        if(data.success) {
+            showNotification('✅ განახლდა!', 'success');
+        } else {
+            info.revert();
+            showNotification('❌ ' + data.error, 'error');
+        }
+    } catch (e) {
+        info.revert();
+        showNotification('❌ შეცდომა', 'error');
     }
 }
 
-function showNotification(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
+async function deleteBooking(id) {
+    if(!confirm('ნამდვილად გსურთ წაშლა?')) return;
+    try {
+        const res = await fetch(`${ADMIN_PREFIX}/bookings/delete/${id}`, { 
+            method: 'POST', 
+            headers: {'X-Requested-With': 'XMLHttpRequest'} 
+        });
+        const data = await res.json();
+        if(data.success) {
+            showNotification('🗑️ წაიშალა', 'success');
+            calendar.refetchEvents();
+            closeAllModals();
+        }
+    } catch (e) { 
+        console.error(e); 
+        showNotification('❌ შეცდომა', 'error');
+    }
+}
+
+function showNotification(msg, type = 'info') {
+    const existing = document.querySelectorAll('.toast-notification');
+    existing.forEach(toast => toast.remove());
     
-    const emoji = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+    const icons = {
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️',
+        warning: '⚠️'
+    };
+    
+    const colors = {
+        success: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        error: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+        info: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+        warning: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+    };
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
     toast.innerHTML = `
-        <span class="toast-icon">${emoji}</span>
-        <span class="toast-message">${message}</span>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 20px;">${icons[type] || icons.info}</span>
+            <span style="font-weight: 600; font-size: 14px;">${msg}</span>
+        </div>
+    `;
+    
+    toast.style.cssText = `
+        position: fixed;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        background: ${colors[type] || colors.info};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        z-index: 10000;
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     `;
     
     document.body.appendChild(toast);
     
-    setTimeout(() => toast.classList.add('show'), 100);
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
     
     setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-20px)';
+        setTimeout(() => toast.remove(), 400);
     }, 3000);
+}
+
+// Placeholder functions
+function showCreateBookingModal(dateStr, barberId) {
+    console.log("Open create modal for", dateStr, "Barber ID:", barberId);
+}
+
+function editBooking(id) {
+    window.location.href = `${ADMIN_PREFIX}/bookings/edit/${id}`;
 }

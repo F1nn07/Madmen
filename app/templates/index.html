@@ -557,54 +557,17 @@
     </div>
     
     <div class="services-grid">
-        <div class="service-card">
-            <div class="service-icon">✂️</div>
-            <h3>კლასიკური თმის შეჭრა</h3>
-            <p>პროფესიონალური თმის შეჭრა გამოცდილი ბარბერის მიერ</p>
-            <div class="service-price">30₾ <span>/ 45 წთ</span></div>
-            <a href="/booking" class="btn-service">დაჯავშნა</a>
-        </div>
-        
-        <div class="service-card">
-            <div class="service-icon">🪒</div>
-            <h3>წვერის მოვლა</h3>
-            <p>წვერის დახვეწა, ფორმირება და ტრიმინგი</p>
-            <div class="service-price">25₾ <span>/ 30 წთ</span></div>
-            <a href="/booking" class="btn-service">დაჯავშნა</a>
-        </div>
-        
-        <div class="service-card">
-            <div class="service-icon">💈</div>
-            <h3>სრული პაკეტი</h3>
-            <p>თმის შეჭრა + წვერის მოვლა + ფეის მასაჟი</p>
-            <div class="service-price">50₾ <span>/ 75 წთ</span></div>
-            <a href="/booking" class="btn-service">დაჯავშნა</a>
-        </div>
-        
-        <div class="service-card">
-            <div class="service-icon">🎨</div>
-            <h3>ჰეირ დიზაინი</h3>
-            <p>კრეატიული ჰედრსთაილი და ხაზები</p>
-            <div class="service-price">40₾ <span>/ 60 წთ</span></div>
-            <a href="/booking" class="btn-service">დაჯავშნა</a>
-        </div>
-        
-        <div class="service-card">
-            <div class="service-icon">💦</div>
-            <h3>ბავშვის თმის შეჭრა</h3>
-            <p>12 წლამდე ასაკის ბავშვებისთვის</p>
-            <div class="service-price">20₾ <span>/ 30 წთ</span></div>
-            <a href="/booking" class="btn-service">დაჯავშნა</a>
-        </div>
-        
-        <div class="service-card">
-            <div class="service-icon">✨</div>
-            <h3>სპეციალური მოვლა</h3>
-            <p>თმის მოვლა, მასკა და სტაილინგი</p>
-            <div class="service-price">35₾ <span>/ 45 წთ</span></div>
-            <a href="/booking" class="btn-service">დაჯავშნა</a>
-        </div>
+    {% for service in services %}
+    <div class="service-card">
+        <div class="service-icon">{{ service.icon or '✂️' }}</div> <h3>{{ service.name }}</h3>
+        <p>{{ service.description or 'პროფესიონალური მომსახურება' }}</p>
+        <div class="service-price">{{ service.price }}₾ <span>/ {{ service.duration }} წთ</span></div>
+        <a href="/booking" class="btn-service">დაჯავშნა</a>
     </div>
+    {% else %}
+    <p style="color: #666; grid-column: 1/-1; text-align: center;">სერვისები ჯერ არ დამატებულა</p>
+    {% endfor %}
+</div>
 </section>
 
 <!-- Stats Section -->

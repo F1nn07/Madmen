@@ -386,259 +386,31 @@
 
 <div class="services-container">
     
-    <!-- Premium Services -->
-    <div class="service-category">
-        <div class="category-header">
-            <h2 class="category-title">💎 პრემიუმ სერვისები</h2>
-            <p class="category-description">ჩვენი ყველაზე პოპულარული და სრული სერვისები</p>
-        </div>
-        
-        <div class="service-items">
-            <div class="service-item">
-                <span class="popular-badge">🔥 ყველაზე პოპულარული</span>
-                <div class="service-header-row">
-                    <div class="service-info">
-                        <div class="service-icon">💈</div>
-                        <h3 class="service-name">სრული VIP პაკეტი</h3>
-                    </div>
+    <div class="services-container">
+    <div class="service-items">
+        {% for service in services %}
+        <div class="service-item">
+            <div class="service-header-row">
+                <div class="service-info">
+                    <div class="service-icon">{{ service.icon or '💈' }}</div>
+                    <h3 class="service-name">{{ service.name }}</h3>
                 </div>
-                <p class="service-description">სრულყოფილი გამოცდილება: პროფესიონალური თმის შეჭრა, წვერის დეტალური მოვლა, სახის მასაჟი ცხელი პირსახოცით და სტაილინგი პრემიუმ პროდუქტებით.</p>
-                <div class="service-features">
-                    <span class="feature-tag">თმის შეჭრა</span>
-                    <span class="feature-tag">წვერის მოვლა</span>
-                    <span class="feature-tag">ფეის მასაჟი</span>
-                    <span class="feature-tag">სტაილინგი</span>
-                </div>
-                <div class="service-pricing">
-                    <div class="price-row">
-                        <span class="price-label">ფასი</span>
-                        <div>
-                            <span class="price-value">70₾</span>
-                            <span class="price-duration">/ 90 წთ</span>
-                        </div>
-                    </div>
-                </div>
-                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
             </div>
+            <p class="service-description">{{ service.description }}</p>
             
-            <div class="service-item">
-                <div class="service-header-row">
-                    <div class="service-info">
-                        <div class="service-icon">✂️</div>
-                        <h3 class="service-name">VIP თმის შეჭრა</h3>
+            <div class="service-pricing">
+                <div class="price-row">
+                    <span class="price-label">ფასი</span>
+                    <div>
+                        <span class="price-value">{{ service.price }}₾</span>
+                        <span class="price-duration">/ {{ service.duration }} წთ</span>
                     </div>
                 </div>
-                <p class="service-description">პრემიუმ კლასის თმის შეჭრა გამოცდილი მასტერის მიერ. მოიცავს კონსულტაციას, თმის დამუშავებას და პროფესიონალურ სტაილინგს.</p>
-                <div class="service-features">
-                    <span class="feature-tag">კონსულტაცია</span>
-                    <span class="feature-tag">თმის დამუშავება</span>
-                    <span class="feature-tag">სტაილინგი</span>
-                </div>
-                <div class="service-pricing">
-                    <div class="price-row">
-                        <span class="price-label">ფასი</span>
-                        <div>
-                            <span class="price-value">50₾</span>
-                            <span class="price-duration">/ 60 წთ</span>
-                        </div>
-                    </div>
-                </div>
-                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
             </div>
-            
-            <div class="service-item">
-                <div class="service-header-row">
-                    <div class="service-info">
-                        <div class="service-icon">🪒</div>
-                        <h3 class="service-name">ტრადიციული ბრიტვით გაპარსვა</h3>
-                    </div>
-                </div>
-                <p class="service-description">კლასიკური ტრადიციული გაპარსვა სტრეიტ რეზორით. მოიცავს ცხელი პირსახოცის მომზადებას, დაპარსვას და დამამშვიდებელ კრემს.</p>
-                <div class="service-features">
-                    <span class="feature-tag">ცხელი პირსახოცი</span>
-                    <span class="feature-tag">სტრეიტ რეზორი</span>
-                    <span class="feature-tag">პრემიუმ კრემი</span>
-                </div>
-                <div class="service-pricing">
-                    <div class="price-row">
-                        <span class="price-label">ფასი</span>
-                        <div>
-                            <span class="price-value">40₾</span>
-                            <span class="price-duration">/ 45 წთ</span>
-                        </div>
-                    </div>
-                </div>
-                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
-            </div>
+            <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
         </div>
+        {% endfor %}
     </div>
-    
-    <!-- Standard Services -->
-    <div class="service-category">
-        <div class="category-header">
-            <h2 class="category-title">✂️ სტანდარტული სერვისები</h2>
-            <p class="category-description">ხარისხიანი და ხელმისაწვდომი სერვისები ყოველდღიური მოვლისთვის</p>
-        </div>
-        
-        <div class="service-items">
-            <div class="service-item">
-                <div class="service-header-row">
-                    <div class="service-info">
-                        <div class="service-icon">✂️</div>
-                        <h3 class="service-name">კლასიკური თმის შეჭრა</h3>
-                    </div>
-                </div>
-                <p class="service-description">პროფესიონალური თმის შეჭრა სტანდარტული ტექნიკებით. იდეალურია რეგულარული მოვლისთვის.</p>
-                <div class="service-features">
-                    <span class="feature-tag">თმის შეჭრა</span>
-                    <span class="feature-tag">თმის გარეცხვა</span>
-                </div>
-                <div class="service-pricing">
-                    <div class="price-row">
-                        <span class="price-label">ფასი</span>
-                        <div>
-                            <span class="price-value">30₾</span>
-                            <span class="price-duration">/ 45 წთ</span>
-                        </div>
-                    </div>
-                </div>
-                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
-            </div>
-            
-            <div class="service-item">
-                <div class="service-header-row">
-                    <div class="service-info">
-                        <div class="service-icon">🪒</div>
-                        <h3 class="service-name">წვერის მოვლა</h3>
-                    </div>
-                </div>
-                <p class="service-description">წვერის დახვეწა, ფორმირება და ტრიმინგი. შესანიშნავია თქვენი წვერის შენარჩუნებისთვის.</p>
-                <div class="service-features">
-                    <span class="feature-tag">ტრიმინგი</span>
-                    <span class="feature-tag">ფორმირება</span>
-                </div>
-                <div class="service-pricing">
-                    <div class="price-row">
-                        <span class="price-label">ფასი</span>
-                        <div>
-                            <span class="price-value">25₾</span>
-                            <span class="price-duration">/ 30 წთ</span>
-                        </div>
-                    </div>
-                </div>
-                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
-            </div>
-            
-            <div class="service-item">
-                <div class="service-header-row">
-                    <div class="service-info">
-                        <div class="service-icon">👦</div>
-                        <h3 class="service-name">ბავშვის თმის შეჭრა</h3>
-                    </div>
-                </div>
-                <p class="service-description">12 წლამდე ასაკის ბავშვებისთვის სპეციალური მიდგომით და მოთმინებით.</p>
-                <div class="service-features">
-                    <span class="feature-tag">12 წლამდე</span>
-                    <span class="feature-tag">სპეციალური მიდგომა</span>
-                </div>
-                <div class="service-pricing">
-                    <div class="price-row">
-                        <span class="price-label">ფასი</span>
-                        <div>
-                            <span class="price-value">20₾</span>
-                            <span class="price-duration">/ 30 წთ</span>
-                        </div>
-                    </div>
-                </div>
-                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Special Services -->
-    <div class="service-category">
-        <div class="category-header">
-            <h2 class="category-title">🎨 სპეციალური სერვისები</h2>
-            <p class="category-description">უნიკალური და კრეატიული სერვისები განსაკუთრებული სტილისთვის</p>
-        </div>
-        
-        <div class="service-items">
-            <div class="service-item">
-                <div class="service-header-row">
-                    <div class="service-info">
-                        <div class="service-icon">🎨</div>
-                        <h3 class="service-name">ჰეირ დიზაინი & ხაზები</h3>
-                    </div>
-                </div>
-                <p class="service-description">კრეატიული ხაზები და პატერნები თმაზე. განსაკუთრებული სტილისთვის და პერსონალიზაციისთვის.</p>
-                <div class="service-features">
-                    <span class="feature-tag">კრეატიული ხაზები</span>
-                    <span class="feature-tag">პატერნები</span>
-                    <span class="feature-tag">დიზაინი</span>
-                </div>
-                <div class="service-pricing">
-                    <div class="price-row">
-                        <span class="price-label">ფასი</span>
-                        <div>
-                            <span class="price-value">40₾</span>
-                            <span class="price-duration">/ 60 წთ</span>
-                        </div>
-                    </div>
-                </div>
-                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
-            </div>
-            
-            <div class="service-item">
-                <div class="service-header-row">
-                    <div class="service-info">
-                        <div class="service-icon">✨</div>
-                        <h3 class="service-name">თმის მოვლა & მასკა</h3>
-                    </div>
-                </div>
-                <p class="service-description">სიღრმისეული თმის მოვლა სპეციალური მასკებით. აღადგენს და აძლიერებს თმას.</p>
-                <div class="service-features">
-                    <span class="feature-tag">მასკა</span>
-                    <span class="feature-tag">მოვლა</span>
-                    <span class="feature-tag">სტაილინგი</span>
-                </div>
-                <div class="service-pricing">
-                    <div class="price-row">
-                        <span class="price-label">ფასი</span>
-                        <div>
-                            <span class="price-value">35₾</span>
-                            <span class="price-duration">/ 45 წთ</span>
-                        </div>
-                    </div>
-                </div>
-                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
-            </div>
-            
-            <div class="service-item">
-                <div class="service-header-row">
-                    <div class="service-info">
-                        <div class="service-icon">🎭</div>
-                        <h3 class="service-name">სახის მასაჟი</h3>
-                    </div>
-                </div>
-                <p class="service-description">დამამშვიდებელი სახის მასაჟი ცხელი პირსახოცით და პრემიუმ კოსმეტიკით.</p>
-                <div class="service-features">
-                    <span class="feature-tag">რელაქსაცია</span>
-                    <span class="feature-tag">ცხელი პირსახოცი</span>
-                </div>
-                <div class="service-pricing">
-                    <div class="price-row">
-                        <span class="price-label">ფასი</span>
-                        <div>
-                            <span class="price-value">30₾</span>
-                            <span class="price-duration">/ 30 წთ</span>
-                        </div>
-                    </div>
-                </div>
-                <a href="/booking" class="btn-book">დაჯავშნა ახლავე</a>
-            </div>
-        </div>
-    </div>
-    
 </div>
 
 <!-- Info Section -->

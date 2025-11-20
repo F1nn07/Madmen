@@ -1,7 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SelectField, DateField, TimeField, TextAreaField, HiddenField
+from wtforms import StringField, SelectField, DateField, TimeField, TextAreaField
 from wtforms.validators import DataRequired, Email, Optional, Length
-
 
 class BookingForm(FlaskForm):
     """ჯავშნის შექმნის/რედაქტირების ფორმა"""
@@ -76,18 +75,20 @@ class BookingForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(BookingForm, self).__init__(*args, **kwargs)
         
-        # Populate service choices
-        from app.models import Service, User
+        # საჭირო მოდელების იმპორტი
+        from app.models import Service, Barber
         
+        # 1. სერვისების ჩატვირთვა
         services = Service.query.filter_by(is_active=True).all()
         self.service_id.choices = [(0, 'აირჩიეთ სერვისი...')] + [
             (s.id, f'{s.name} - {s.price}₾ ({s.duration}წთ)') 
             for s in services
         ]
         
-        # Populate barber choices
-        barbers = User.query.filter_by(role='barber', is_active=True).all()
+        # 2. ✅ FIX: ბარბერების ჩატვირთვა Barber მოდელიდან (და არა User-იდან)
+        # ასე ვიღებთ სწორ ID-ს (Barber.id)
+        barbers = Barber.query.filter_by(is_available=True).all()
         self.barber_id.choices = [(0, 'აირჩიეთ ბარბერი...')] + [
-            (b.id, b.get_full_name()) 
+            (b.id, b.name) 
             for b in barbers
         ]

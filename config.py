@@ -30,6 +30,9 @@ class Config:
     # WTF CSRF Protection
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = None
+    # File Upload Settings
+    UPLOAD_FOLDER = os.path.join('app', 'static', 'uploads', 'avatars')
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB მაქსიმუმი
     
     # ==================
     # Email Configuration

@@ -2,34 +2,63 @@
 <html lang="ka">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}MAD-MEN Barbershop{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     
-    <!-- Google Fonts -->
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>{% block title %}MAD-MEN Barbershop{% endblock %}</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/madmen-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/madmen-logo.png') }}">
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* ✅ 1. iOS Input Zoom Fix */
+        @media screen and (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
+
+        html { 
+            scroll-behavior: smooth; 
+            background-color: #0a0a0a; 
+            height: 100%;
         }
         
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-            color: #ffffff;
-            min-height: 100vh;
-            overflow-x: hidden;
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%); 
+            color: #ffffff; 
+            min-height: 100vh; 
+            overflow-x: hidden; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ✅ 2. Smart Sticky Button Animation */
+        #stickyBookingBtn {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+            transform: translateY(200%); /* ეკრანის ქვემოთ დამალული */
+            opacity: 0;
+            pointer-events: none; /* რომ ხელი არ შეგვიშალოს როცა დამალულია */
         }
         
-        /* Navigation */
+        #stickyBookingBtn.visible {
+            transform: translateY(0); /* ამოწევა */
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Navigation Styles */
         .navbar {
             position: fixed;
             top: 0;
             width: 100%;
             background: rgba(10, 10, 10, 0.95);
             backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 15px 0;
             z-index: 1000;
             border-bottom: 1px solid rgba(183, 125, 74, 0.2);
@@ -46,70 +75,11 @@
             position: relative;
         }
         
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .logo { height: 60px; width: auto; }
         
-        .logo-container a {
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-        }
-        
-        .logo {
-            height: 100px;
-            width: auto;
-            transition: transform 0.3s ease;
-            display: block;
-        }
-        
-        .logo:hover {
-            transform: scale(1.05);
-        }
-        
-        .nav-center {
-            display: flex;
-            gap: 35px;
-            list-style: none;
-            align-items: center;
-        }
-        
-        .nav-link {
-            color: #ffffff;
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            position: relative;
-            padding: 8px 0;
-        }
-        
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #B07D4A, #C724B1);
-            transition: width 0.3s ease;
-        }
-        
-        .nav-link:hover::after {
-            width: 100%;
-        }
-        
-        .nav-link:hover {
-            color: #B07D4A;
-        }
-        
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        .nav-center { display: flex; gap: 35px; list-style: none; align-items: center; }
+        .nav-link { color: #ffffff; text-decoration: none; font-weight: 500; font-size: 15px; transition: color 0.3s; }
+        .nav-link:hover { color: #B07D4A; }
         
         .btn-primary {
             background: linear-gradient(135deg, #B07D4A, #C724B1);
@@ -119,30 +89,16 @@
             text-decoration: none;
             font-weight: 600;
             transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
             box-shadow: 0 4px 15px rgba(183, 125, 74, 0.3);
         }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(183, 125, 74, 0.5);
-        }
-        
-        /* Main Content */
-        .main-content {
-            margin-top: 80px;
-            min-height: calc(100vh - 80px);
-        }
-        
-        /* Footer */
+
+        /* Footer Styles */
         .footer {
             background: #0a0a0a;
             border-top: 1px solid rgba(183, 125, 74, 0.2);
-            padding: 40px 0;
+            padding: 40px 0 80px 0;
             margin-top: 80px;
         }
-        
         .footer-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -151,47 +107,6 @@
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 40px;
         }
-        
-        .footer-section h3 {
-            color: #B07D4A;
-            margin-bottom: 20px;
-            font-size: 18px;
-        }
-        
-        .footer-section p,
-        .footer-section a {
-            color: #999;
-            text-decoration: none;
-            line-height: 1.8;
-            transition: color 0.3s ease;
-        }
-        
-        .footer-section a:hover {
-            color: #B07D4A;
-        }
-        
-        .social-links {
-            display: flex;
-            gap: 15px;
-            margin-top: 15px;
-        }
-        
-        .social-link {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(183, 125, 74, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        
-        .social-link:hover {
-            background: linear-gradient(135deg, #B07D4A, #C724B1);
-            transform: translateY(-3px);
-        }
-        
         .footer-bottom {
             text-align: center;
             margin-top: 40px;
@@ -200,90 +115,43 @@
             color: #666;
             font-size: 14px;
         }
+
+        /* Mobile Menu */
+        .mobile-toggle { display: none; flex-direction: column; gap: 6px; cursor: pointer; }
+        .mobile-toggle span { width: 28px; height: 3px; background: #B07D4A; border-radius: 2px; transition: 0.3s; }
         
-        /* Mobile Menu Toggle */
-        .mobile-toggle {
-            display: none;
-            flex-direction: column;
-            gap: 6px;
-            cursor: pointer;
-            padding: 8px;
-        }
-        
-        .mobile-toggle span {
-            width: 28px;
-            height: 3px;
-            background: #B07D4A;
-            border-radius: 2px;
-            transition: all 0.3s ease;
-        }
-        
-        /* Responsive */
         @media (max-width: 968px) {
-            .logo {
-                height: 65px;
-            }
+            .nav-center, .nav-right { display: none; }
             
-            .nav-center {
-                position: fixed;
-                top: 80px;
-                left: -100%;
-                flex-direction: column;
-                background: rgba(10, 10, 10, 0.98);
-                width: 100%;
-                padding: 30px;
-                transition: left 0.3s ease;
-                border-bottom: 1px solid rgba(183, 125, 74, 0.2);
-            }
+            .mobile-toggle { display: flex; }
             
+            /* Mobile Menu Overlay */
             .nav-center.active {
-                left: 0;
-            }
-            
-            .nav-right {
-                position: fixed;
-                top: calc(80px + 200px);
-                left: -100%;
-                flex-direction: column;
-                background: rgba(10, 10, 10, 0.98);
-                width: 100%;
-                padding: 20px 30px;
-                transition: left 0.3s ease;
-            }
-            
-            .nav-right.active {
-                left: 0;
-            }
-            
-            .mobile-toggle {
                 display: flex;
+                position: fixed;
+                top: 0;
+                left: 0;
+                flex-direction: column;
+                background: #0a0a0a;
+                width: 100%;
+                height: 100vh;
+                padding: 100px 30px;
+                z-index: 998;
+                align-items: center;
+                gap: 40px;
             }
             
-            .footer-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .logo {
-                height: 65px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .logo {
-                height: 55px;
-            }
+            .nav-link { font-size: 24px; }
         }
     </style>
-    
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     
-    <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="logo-container">
-                <a href="/" style="text-decoration: none;">
+                <a href="/">
                     <img src="{{ url_for('static', filename='images/madmen-logo.png') }}" alt="MAD-MEN Logo" class="logo">
                 </a>
             </div>
@@ -293,80 +161,95 @@
                 <li><a href="/services" class="nav-link">სერვისები</a></li>
                 <li><a href="/barbers" class="nav-link">ჩვენი გუნდი</a></li>
                 <li><a href="/contact" class="nav-link">კონტაქტი</a></li>
+                <li class="md:hidden mt-8">
+                    <a href="/booking" class="btn-primary text-xl px-12 py-4">დაჯავშნა</a>
+                </li>
             </ul>
             
-            <div class="nav-right" id="navRight">
+            <div class="nav-right hidden md:block">
                 <a href="/booking" class="btn-primary">დაჯავშნა</a>
             </div>
             
             <div class="mobile-toggle" onclick="toggleMenu()">
-                <span></span>
-                <span></span>
-                <span></span>
+                <span></span><span></span><span></span>
             </div>
         </div>
     </nav>
     
-    <!-- Main Content -->
     <main class="main-content">
         {% block content %}{% endblock %}
     </main>
     
-    <!-- Footer -->
     <footer class="footer">
         <div class="footer-container">
             <div class="footer-section">
-                <h3>MAD-MEN</h3>
-                <p>თბილისის საუკეთესო barbershop - სადაც სტილი და ხარისხი ხვდება.</p>
-                <div class="social-links">
-                    <a href="#" class="social-link">📘</a>
-                    <a href="#" class="social-link">📸</a>
-                    <a href="#" class="social-link">🦅</a>
-                </div>
+                <h3 class="text-[#B07D4A] font-bold mb-4 text-lg">MAD-MEN</h3>
+                <p class="text-gray-500 leading-loose">თბილისის საუკეთესო barbershop.</p>
             </div>
             
             <div class="footer-section">
-                <h3>სწრაფი ბმულები</h3>
-                <p><a href="/services">სერვისები</a></p>
-                <p><a href="/barbers">ჩვენი გუნდი</a></p>
-                <p><a href="/booking">დაჯავშნა</a></p>
-                <p><a href="/contact">კონტაქტი</a></p>
+                <h3 class="text-[#B07D4A] font-bold mb-4 text-lg">სწრაფი ბმულები</h3>
+                <ul class="space-y-2">
+                    <li><a href="/services" class="text-gray-500 hover:text-[#B07D4A]">სერვისები</a></li>
+                    <li><a href="/barbers" class="text-gray-500 hover:text-[#B07D4A]">ჩვენი გუნდი</a></li>
+                    <li><a href="/booking" class="text-gray-500 hover:text-[#B07D4A]">დაჯავშნა</a></li>
+                </ul>
             </div>
             
             <div class="footer-section">
-                <h3>კონტაქტი</h3>
-                <p>📍 თბილისი, საქართველო</p>
-                <p>📞 +995 555 123 456</p>
-                <p>✉️ info@madmen.ge</p>
-                <p style="margin-top: 10px;">
-                    <a href="https://www.google.com/maps/place/Barbershop+MAD+MEN/@41.7943795,44.8179901,17z" target="_blank" style="color: #B07D4A;">📍 Google Maps</a>
-                </p>
-            </div>
-            
-            <div class="footer-section">
-                <h3>სამუშაო საათები</h3>
-                <p>ორშაბათი - შაბათი: 10:00 - 20:00</p>
-                <p>შაბათი: 10:00 - 20:00</p>
-                <p>კვირა: 12:00 - 18:00</p>
+                <h3 class="text-[#B07D4A] font-bold mb-4 text-lg">კონტაქტი</h3>
+                <p class="text-gray-500 mb-2">📍 თბილისი, საქართველო</p>
+                <p class="text-gray-500 mb-2">📞 +995 555 123 456</p>
+                <a href="https://goo.gl/maps" target="_blank" class="text-[#B07D4A] font-bold mt-2 block">📍 Google Maps</a>
             </div>
         </div>
+        <div class="footer-bottom">
+            <p>© 2025 MAD-MEN Barbershop. ყველა უფლება დაცულია.</p>
+        </div>
     </footer>
+
+    <div id="stickyBookingBtn" class="fixed bottom-6 left-4 right-4 z-50 md:hidden">
+        <a href="/booking" onclick="triggerHaptic()" class="block w-full bg-gradient-to-r from-[#B07D4A] to-[#C724B1] text-white text-center font-bold py-4 rounded-2xl shadow-2xl border border-white/10 backdrop-blur-md transform active:scale-95 transition-transform">
+            📅 ვიზიტის დაჯავშნა
+        </a>
+    </div>
     
     <script>
+        // Mobile Menu Logic
         function toggleMenu() {
-            const navCenter = document.getElementById('navCenter');
-            const navRight = document.getElementById('navRight');
-            navCenter.classList.toggle('active');
-            navRight.classList.toggle('active');
+            document.getElementById('navCenter').classList.toggle('active');
         }
         
-        // Close menu on link click (mobile)
-        document.querySelectorAll('.nav-link, .btn-primary').forEach(link => {
+        // Close menu on link click
+        document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', () => {
                 document.getElementById('navCenter').classList.remove('active');
-                document.getElementById('navRight').classList.remove('active');
             });
         });
+
+        // ✅ Haptic Feedback Helper (ვიბრაცია)
+        function triggerHaptic() {
+            if (navigator.vibrate) {
+                navigator.vibrate(10); // მსუბუქი ვიბრაცია
+            }
+        }
+
+        // ✅ Smart Scroll Logic for Sticky Button
+        const stickyBtn = document.getElementById('stickyBookingBtn');
+        
+        // თუ მომხმარებელი უკვე ბუქინგზეა, საერთოდ არ ვაჩვენებთ
+        if (window.location.pathname === '/booking') {
+            stickyBtn.style.display = 'none';
+        } else {
+            window.addEventListener('scroll', () => {
+                // როცა 400px-ზე მეტს ჩამოწევს (Hero სექციას გაცდება)
+                if (window.scrollY > 400) {
+                    stickyBtn.classList.add('visible');
+                } else {
+                    stickyBtn.classList.remove('visible');
+                }
+            });
+        }
     </script>
     
     {% block extra_js %}{% endblock %}

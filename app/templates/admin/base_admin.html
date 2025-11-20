@@ -2,596 +2,154 @@
 <html lang="ka">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}Admin Panel{% endblock %} - MAD-MEN</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/madmen-logo.png') }}">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary-gold: #B07D4A;
-            --secondary-pink: #C724B1;
-            --dark-bg: #0a0a0a;
-            --card-bg: #1a1a1a;
-            --border-color: #333;
-            --text-primary: #ffffff;
-            --text-secondary: #888;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --info: #3b82f6;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: var(--dark-bg);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-        }
-
-        /* 📱 MOBILE SIDEBAR TOGGLE */
-        .sidebar-toggle-btn {
-            display: none;
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            z-index: 1000;
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, rgba(176, 125, 74, 0.95), rgba(199, 36, 177, 0.95));
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            cursor: pointer;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-        }
-
-        .sidebar-toggle-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(176, 125, 74, 0.6);
-        }
-
-        .sidebar-toggle-btn:active {
-            transform: scale(0.95);
-        }
-
-        .sidebar-toggle-btn svg {
-            width: 24px;
-            height: 24px;
-            transition: transform 0.3s ease;
-        }
-
-        .sidebar-toggle-btn.active svg {
-            transform: rotate(90deg);
-        }
-
-        .sidebar-overlay {
-            display: none;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        
+        body { background-color: #0a0a0a; color: #fff; font-family: system-ui, -apple-system, sans-serif; overflow-x: hidden; }
+        
+        /* Sidebar Animation */
+        .sidebar { 
+            transition: transform 0.3s ease-in-out;
+            width: 280px;
+            height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(4px);
-            z-index: 998;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            z-index: 50;
+            background-color: #111;
+            border-right: 1px solid #333;
         }
-
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 260px;
-            background: var(--card-bg);
-            border-right: 1px solid var(--border-color);
-            padding: 20px 0;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 999;
-        }
-
-        .sidebar-logo {
-            padding: 0 20px 30px;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .sidebar-logo img {
-            width: 120px;
-            height: auto;
-        }
-
-        .sidebar-logo h2 {
-            font-family: 'Slab Serif', serif;
-            background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 18px;
-            margin-top: 10px;
-        }
-
-        .sidebar-nav {
-            padding: 0 10px;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-
-        .nav-item:hover {
-            background: rgba(176, 125, 74, 0.1);
-            color: var(--primary-gold);
-        }
-
-        .nav-item.active {
-            background: linear-gradient(135deg, rgba(176, 125, 74, 0.2), rgba(199, 36, 177, 0.2));
-            color: var(--text-primary);
-            border-left: 3px solid var(--primary-gold);
-        }
-
-        .nav-item-icon {
-            width: 20px;
-            margin-right: 12px;
-            font-size: 18px;
-        }
-
-        .nav-section {
-            padding: 20px 20px 10px;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-secondary);
-            font-weight: 600;
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: 260px;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* Top Header */
-        .top-header {
-            background: var(--card-bg);
-            border-bottom: 1px solid var(--border-color);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header-left h1 {
-            font-size: 22px;
-            font-weight: 600;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .user-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .user-name {
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .user-role {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .btn-logout {
-            padding: 8px 16px;
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid var(--danger);
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 13px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-logout:hover {
-            background: var(--danger);
-            color: white;
-        }
-
-        /* Content Area */
-        .content-area {
-            flex: 1;
-            padding: 30px;
-        }
-
-        /* Flash Messages */
-        .flash-messages {
-            margin-bottom: 20px;
-        }
-
-        .flash-message {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .flash-success {
-            background: rgba(16, 185, 129, 0.1);
-            border-left: 4px solid var(--success);
-            color: var(--success);
-        }
-
-        .flash-danger,
-        .flash-error {
-            background: rgba(239, 68, 68, 0.1);
-            border-left: 4px solid var(--danger);
-            color: var(--danger);
-        }
-
-        .flash-warning {
-            background: rgba(245, 158, 11, 0.1);
-            border-left: 4px solid var(--warning);
-            color: var(--warning);
-        }
-
-        .flash-info {
-            background: rgba(59, 130, 246, 0.1);
-            border-left: 4px solid var(--info);
-            color: var(--info);
-        }
-
-        /* 📱 MOBILE RESPONSIVE */
+        
+        /* Mobile Logic */
         @media (max-width: 768px) {
-            /* Show toggle button */
-            .sidebar-toggle-btn {
-                display: flex;
-            }
-
-            /* Hide sidebar by default */
-            .sidebar {
-                left: -100%;
-                width: 280px;
-                max-width: 85vw;
-                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: 2px 0 25px rgba(0, 0, 0, 0.5);
-            }
-
-            /* Show sidebar when active */
-            .sidebar.active {
-                left: 0;
-            }
-
-            /* Adjust main content */
-            .main-content {
-                margin-left: 0;
-            }
-
-            .content-area {
-                padding: 20px 15px;
-                margin-top: 60px;
-            }
-
-            .top-header {
-                padding: 15px 70px 15px 15px;
-            }
-
-            .user-details {
-                display: none;
-            }
-
-            /* Prevent body scroll when sidebar is open */
-            body.sidebar-open {
-                overflow: hidden;
-                position: fixed;
-                width: 100%;
-            }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; width: 100%; }
         }
-
-        /* Desktop */
+        
         @media (min-width: 769px) {
-            .sidebar-toggle-btn,
-            .sidebar-overlay {
-                display: none !important;
-            }
+            .main-content { margin-left: 280px; }
+            .sidebar-toggle-btn { display: none; }
         }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <!-- 📱 Mobile Sidebar Toggle Button -->
-    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" id="sidebarToggleBtn" aria-label="მენიუ">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-    </button>
+<body class="flex h-screen overflow-hidden">
 
-    <!-- 📱 Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/80 z-40 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
 
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-logo">
-            <img src="{{ url_for('static', filename='images/madmen-logo.png') }}" alt="MAD-MEN">
-            <h2>Admin Panel</h2>
+    <aside id="sidebar" class="sidebar flex flex-col">
+        <div class="p-6 border-b border-[#333] flex items-center gap-3 justify-center">
+            <img src="{{ url_for('static', filename='images/madmen-logo.png') }}" class="h-8 w-auto">
+            <span class="font-bold text-xl tracking-wide text-[#B07D4A]">ADMIN</span>
         </div>
 
-        <nav class="sidebar-nav">
-            <div class="nav-section">მენიუ</div>
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 mt-2 px-2">მენიუ</div>
             
-            <a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
-                <span class="nav-item-icon">📊</span>
-                <span class="nav-item-text">დაფა</span>
+            <a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-300 hover:bg-[#222] hover:text-[#B07D4A] transition-colors {% if request.endpoint == 'admin.dashboard' %}bg-[#222] text-[#B07D4A]{% endif %}">
+                <span>📊</span> დაფა
             </a>
-
-            <a href="{{ url_for('admin.bookings') }}" class="nav-item {% if request.endpoint and 'booking' in request.endpoint %}active{% endif %}">
-                <span class="nav-item-icon">📅</span>
-                <span class="nav-item-text">ჯავშნები</span>
+            <a href="{{ url_for('admin.bookings') }}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-300 hover:bg-[#222] hover:text-[#B07D4A] transition-colors {% if 'booking' in request.endpoint %}bg-[#222] text-[#B07D4A]{% endif %}">
+                <span>📅</span> ჯავშნები
             </a>
 
             {% if current_user.is_admin() %}
-            <div class="nav-section">მართვა</div>
-            
-            <a href="{{ url_for('admin.services') }}" class="nav-item {% if request.endpoint and 'service' in request.endpoint %}active{% endif %}">
-                <span class="nav-item-icon">✂️</span>
-                <span class="nav-item-text">სერვისები</span>
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 mt-6 px-2">მართვა</div>
+            <a href="{{ url_for('admin.users') }}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-300 hover:bg-[#222] hover:text-[#B07D4A] transition-colors {% if 'user' in request.endpoint %}bg-[#222] text-[#B07D4A]{% endif %}">
+                <span>👥</span> მომხმარებლები
             </a>
-
-            <a href="{{ url_for('admin.users') }}" class="nav-item {% if request.endpoint and 'user' in request.endpoint %}active{% endif %}">
-                <span class="nav-item-icon">👥</span>
-                <span class="nav-item-text">მომხმარებლები</span>
+            <a href="{{ url_for('admin.clients') }}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-300 hover:bg-[#222] hover:text-[#B07D4A] transition-colors {% if 'client' in request.endpoint %}bg-[#222] text-[#B07D4A]{% endif %}">
+                <span>📇</span> კლიენტები
             </a>
-
-            <a href="{{ url_for('admin.statistics') }}" class="nav-item {% if request.endpoint == 'admin.statistics' %}active{% endif %}">
-                <span class="nav-item-icon">📈</span>
-                <span class="nav-item-text">სტატისტიკა</span>
+            <a href="{{ url_for('admin.services') }}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-300 hover:bg-[#222] hover:text-[#B07D4A] transition-colors {% if 'service' in request.endpoint %}bg-[#222] text-[#B07D4A]{% endif %}">
+                <span>✂️</span> სერვისები
+            </a>
+            <a href="{{ url_for('admin.statistics') }}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-300 hover:bg-[#222] hover:text-[#B07D4A] transition-colors {% if 'statistics' in request.endpoint %}bg-[#222] text-[#B07D4A]{% endif %}">
+                <span>📈</span> სტატისტიკა
             </a>
             {% endif %}
 
-            <div class="nav-section">სხვა</div>
-            
-            <a href="{{ url_for('main.index') }}" class="nav-item" target="_blank">
-                <span class="nav-item-icon">🌐</span>
-                <span class="nav-item-text">ვებსაიტი</span>
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 mt-6 px-2">პირადი</div>
+            <a href="{{ url_for('admin.schedule_index') }}" class="flex items-center gap-3 px-3 py-3 rounded-lg text-gray-300 hover:bg-[#222] hover:text-[#B07D4A] transition-colors {% if 'schedule' in request.endpoint %}bg-[#222] text-[#B07D4A]{% endif %}">
+                <span>⏰</span> გრაფიკი
             </a>
         </nav>
+        
+        <div class="p-4 border-t border-[#333]">
+            <a href="{{ url_for('admin.logout') }}" class="flex items-center justify-center gap-2 text-red-400 hover:text-red-300 text-sm bg-red-900/20 py-3 rounded-lg transition-colors">
+                <span>🚪</span> გასვლა
+            </a>
+        </div>
     </aside>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <!-- Top Header -->
-        <header class="top-header">
-            <div class="header-left">
-                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+    <div class="main-content flex-1 flex flex-col min-w-0 h-screen bg-[#0a0a0a]">
+        
+        <header class="h-16 bg-[#111] border-b border-[#333] flex items-center justify-between px-4 shrink-0 sticky top-0 z-30">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSidebar()" class="md:hidden p-2 text-gray-400 hover:text-white rounded-lg hover:bg-[#222]">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <h1 class="text-lg font-bold text-white truncate">{% block page_title %}Dashboard{% endblock %}</h1>
             </div>
 
-            <div class="header-right">
-                <div class="user-info">
-                    <div class="user-avatar">
-                        {{ current_user.first_name[0] if current_user.first_name else current_user.username[0] }}
-                    </div>
-                    <div class="user-details">
-                        <span class="user-name">{{ current_user.get_full_name() }}</span>
-                        <span class="user-role">{{ current_user.role|upper }}</span>
-                    </div>
+            <div class="flex items-center gap-3">
+                <div class="hidden md:block text-right">
+                    <div class="text-sm font-medium text-white">{{ current_user.get_full_name() }}</div>
+                    <div class="text-xs text-gray-500 uppercase">{{ current_user.role }}</div>
                 </div>
-                <a href="{{ url_for('admin.logout') }}" class="btn-logout">გამოსვლა</a>
+                <div class="w-9 h-9 rounded-full bg-gradient-to-r from-[#B07D4A] to-[#C724B1] flex items-center justify-center font-bold text-white text-sm">
+                    {{ current_user.first_name[0] if current_user.first_name else 'A' }}
+                </div>
             </div>
         </header>
 
-        <!-- Content Area -->
-        <main class="content-area">
-            <!-- Flash Messages -->
+        <main class="flex-1 overflow-y-auto p-4 lg:p-8">
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    <div class="flash-messages">
+                    <div class="mb-6 space-y-2">
                         {% for category, message in messages %}
-                            <div class="flash-message flash-{{ category }}">
-                                <span>
-                                    {% if category == 'success' %}✅
-                                    {% elif category == 'danger' or category == 'error' %}❌
-                                    {% elif category == 'warning' %}⚠️
-                                    {% elif category == 'info' %}ℹ️
-                                    {% endif %}
-                                </span>
-                                <span>{{ message }}</span>
+                            <div class="p-4 rounded-lg border flex items-center gap-3 text-sm
+                                {% if category == 'success' %}bg-green-900/20 border-green-900/50 text-green-400{% endif %}
+                                {% if category == 'danger' %}bg-red-900/20 border-red-900/50 text-red-400{% endif %}">
+                                <span>{{ '✅' if category == 'success' else '⚠️' }}</span>
+                                <p>{{ message }}</p>
                             </div>
                         {% endfor %}
                     </div>
                 {% endif %}
             {% endwith %}
 
-            <!-- Page Content -->
             {% block content %}{% endblock %}
         </main>
     </div>
 
-    <!-- 📱 GLOBAL SIDEBAR TOGGLE SCRIPT -->
     <script>
-        // Toggle sidebar function
         function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
+            const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
-            const toggleBtn = document.getElementById('sidebarToggleBtn');
-            const body = document.body;
+            sidebar.classList.toggle('active');
             
-            if (!sidebar || !overlay) return;
-            
-            const isActive = sidebar.classList.toggle('active');
-            overlay.classList.toggle('active');
-            
-            if (toggleBtn) {
-                toggleBtn.classList.toggle('active');
-            }
-            
-            // Lock/unlock body scroll on mobile
-            if (window.innerWidth < 768) {
-                if (isActive) {
-                    body.classList.add('sidebar-open');
-                } else {
-                    body.classList.remove('sidebar-open');
-                }
+            if (sidebar.classList.contains('active')) {
+                overlay.classList.remove('hidden');
+            } else {
+                overlay.classList.add('hidden');
             }
         }
 
-        // Initialize sidebar functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const overlay = document.getElementById('sidebarOverlay');
-            
-            // Close sidebar when clicking overlay
-            if (overlay) {
-                overlay.addEventListener('click', toggleSidebar);
-            }
-            
-            // Close sidebar on escape key (mobile only)
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && window.innerWidth < 768) {
-                    const sidebar = document.querySelector('.sidebar');
-                    if (sidebar && sidebar.classList.contains('active')) {
-                        toggleSidebar();
-                    }
-                }
-            });
-            
-            // Auto-close sidebar when clicking links (mobile only)
-            if (window.innerWidth < 768) {
-                document.querySelectorAll('.sidebar a').forEach(link => {
-                    link.addEventListener('click', function() {
-                        setTimeout(() => {
-                            const sidebar = document.querySelector('.sidebar');
-                            if (sidebar && sidebar.classList.contains('active')) {
-                                toggleSidebar();
-                            }
-                        }, 200);
-                    });
-                });
-            }
-            
-            // Handle window resize
-            let resizeTimer;
-            window.addEventListener('resize', function() {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(function() {
-                    // Close sidebar and cleanup when switching to desktop
-                    if (window.innerWidth >= 768) {
-                        const sidebar = document.querySelector('.sidebar');
-                        const overlay = document.getElementById('sidebarOverlay');
-                        const toggleBtn = document.getElementById('sidebarToggleBtn');
-                        const body = document.body;
-                        
-                        if (sidebar) sidebar.classList.remove('active');
-                        if (overlay) overlay.classList.remove('active');
-                        if (toggleBtn) toggleBtn.classList.remove('active');
-                        body.classList.remove('sidebar-open');
-                    }
-                }, 250);
-            });
-        });
+        const CURRENT_USER_ROLE = "{{ current_user.role }}";
+        const CURRENT_USER_ID = {{ current_user.id }};
 
-        // Prevent body scroll on iOS when sidebar is open
-        document.addEventListener('touchmove', function(e) {
-            if (document.body.classList.contains('sidebar-open')) {
-                const sidebar = document.querySelector('.sidebar');
-                const overlay = document.getElementById('sidebarOverlay');
-                
-                // Allow scrolling only within sidebar
-                if (sidebar && !sidebar.contains(e.target) && e.target !== overlay) {
-                    e.preventDefault();
-                }
-            }
-        }, { passive: false });
-
-        // Auto-hide flash messages after 5 seconds
-        setTimeout(() => {
-            const flashMessages = document.querySelectorAll('.flash-message');
-            flashMessages.forEach(msg => {
-                msg.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => msg.remove(), 300);
-            });
-        }, 5000);
-
-        // Add slideOut animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideOut {
-                to {
-                    opacity: 0;
-                    transform: translateX(100%);
-                }
-            }
-        `;
-        document.head.appendChild(style);
     </script>
-
     {% block extra_js %}{% endblock %}
 </body>
 </html>

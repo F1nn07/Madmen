@@ -1,338 +1,86 @@
 {% extends "admin/base_admin.html" %}
-
-{% block title %}მომხმარებლების მართვა{% endblock %}
-{% block page_title %}მომხმარებლების მართვა{% endblock %}
-
-{% block extra_css %}
-<style>
-    .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 30px;
-    }
-
-    .btn-create {
-        padding: 12px 24px;
-        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
-        border: none;
-        border-radius: 8px;
-        color: white;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .btn-create:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(176, 125, 74, 0.4);
-    }
-
-    .users-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 20px;
-    }
-
-    .user-card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 25px;
-        transition: all 0.3s ease;
-        position: relative;
-    }
-
-    .user-card:hover {
-        transform: translateY(-5px);
-        border-color: var(--primary-gold);
-        box-shadow: 0 10px 30px rgba(176, 125, 74, 0.2);
-    }
-
-    .user-header {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 15px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .user-avatar {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        font-weight: 600;
-        flex-shrink: 0;
-    }
-
-    .user-info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .user-name {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 4px;
-        color: var(--text-primary);
-    }
-
-    .user-username {
-        font-size: 13px;
-        color: var(--text-secondary);
-    }
-
-    .user-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 15px;
-    }
-
-    .badge {
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .badge-admin {
-        background: rgba(199, 36, 177, 0.1);
-        color: var(--secondary-pink);
-        border: 1px solid var(--secondary-pink);
-    }
-
-    .badge-barber {
-        background: rgba(176, 125, 74, 0.1);
-        color: var(--primary-gold);
-        border: 1px solid var(--primary-gold);
-    }
-
-    .badge-reception {
-        background: rgba(59, 130, 246, 0.1);
-        color: var(--info);
-        border: 1px solid var(--info);
-    }
-
-    .badge-active {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success);
-        border: 1px solid var(--success);
-    }
-
-    .badge-inactive {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--danger);
-        border: 1px solid var(--danger);
-    }
-
-    .user-details {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-bottom: 15px;
-    }
-
-    .user-detail {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 13px;
-        color: var(--text-secondary);
-    }
-
-    .user-detail-icon {
-        font-size: 14px;
-    }
-
-    .user-actions {
-        display: flex;
-        gap: 8px;
-        padding-top: 15px;
-        border-top: 1px solid var(--border-color);
-    }
-
-    .btn-action {
-        flex: 1;
-        padding: 10px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        border: 1px solid var(--border-color);
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--text-secondary);
-    }
-
-    .btn-action:hover {
-        background: rgba(176, 125, 74, 0.1);
-        border-color: var(--primary-gold);
-        color: var(--primary-gold);
-    }
-
-    .btn-action.delete {
-        border: none;
-        background: transparent;
-    }
-
-    .btn-action.delete:hover {
-        background: rgba(239, 68, 68, 0.1);
-        border-color: var(--danger);
-        color: var(--danger);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 80px 20px;
-        color: var(--text-secondary);
-    }
-
-    .empty-state-icon {
-        font-size: 64px;
-        margin-bottom: 20px;
-        opacity: 0.5;
-    }
-
-    .empty-state h3 {
-        font-size: 18px;
-        margin-bottom: 10px;
-    }
-
-    @media (max-width: 768px) {
-        .users-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .page-header {
-            flex-direction: column;
-            gap: 15px;
-            align-items: stretch;
-        }
-
-        .btn-create {
-            justify-content: center;
-        }
-    }
-</style>
-{% endblock %}
+{% block page_title %}მომხმარებლები{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div>
-        <p style="color: var(--text-secondary); font-size: 14px;">მართეთ გუნდის წევრები და წვდომები</p>
+<div class="bg-[#1a1a1a] border border-[#333] rounded-xl overflow-hidden shadow-xl">
+    
+    <div class="p-5 border-b border-[#333] flex justify-between items-center bg-[#111]">
+        <div>
+            <h2 class="text-white font-bold text-lg">სისტემის მომხმარებლები</h2>
+            <p class="text-xs text-gray-500 mt-1">მართეთ წვდომები და როლები</p>
+        </div>
+        <a href="{{ url_for('admin.user_create') }}" class="bg-gradient-to-r from-[#B07D4A] to-[#C724B1] text-white text-sm font-bold px-4 py-2.5 rounded-xl hover:shadow-lg hover:shadow-[#B07D4A]/20 transition-all flex items-center gap-2">
+            <span>+</span> ახალი
+        </a>
     </div>
-    <a href="{{ url_for('admin.user_create') }}" class="btn-create">
-        <span>➕</span>
-        <span>ახალი მომხმარებელი</span>
-    </a>
-</div>
-
-{% if users %}
-<div class="users-grid">
-    {% for user in users %}
-    <div class="user-card">
-        <div class="user-header">
-            <div class="user-avatar">
-                {{ user.first_name[0] if user.first_name else user.username[0] }}
-            </div>
-            <div class="user-info">
-                <div class="user-name">{{ user.get_full_name() }}</div>
-                <div class="user-username">@{{ user.username }}</div>
-            </div>
-        </div>
-
-        <div class="user-badges">
-            {% if user.role == 'admin' %}
-                <span class="badge badge-admin">👑 ადმინი</span>
-            {% elif user.role == 'barber' %}
-                <span class="badge badge-barber">✂️ ბარბერი</span>
-            {% elif user.role in ['receptionist', 'reception'] %}
-                <span class="badge badge-reception">📞 რეცეფცია</span>
-            {% endif %}
-
-            <span class="badge badge-{{ 'active' if user.is_active else 'inactive' }}">
-                {{ 'აქტიური' if user.is_active else 'არააქტიური' }}
-            </span>
-        </div>
-
-        <div class="user-details">
-            {% if user.email %}
-            <div class="user-detail">
-                <span class="user-detail-icon">📧</span>
-                <span>{{ user.email }}</span>
-            </div>
-            {% endif %}
-
-            {% if user.phone %}
-            <div class="user-detail">
-                <span class="user-detail-icon">📱</span>
-                <span>{{ user.phone }}</span>
-            </div>
-            {% endif %}
-
-            {% if user.specialization and user.role == 'barber' %}
-            <div class="user-detail">
-                <span class="user-detail-icon">⭐</span>
-                <span>{{ user.specialization }}</span>
-            </div>
-            {% endif %}
-
-            <div class="user-detail">
-                <span class="user-detail-icon">📅</span>
-                <span>შეიქმნა: {{ user.created_at.strftime('%d/%m/%Y') }}</span>
-            </div>
-        </div>
-
-        <div class="user-actions">
-            <a href="{{ url_for('admin.user_edit', id=user.id) }}" class="btn-action">
-                <span>✏️</span>
-                <span>რედაქტირება</span>
-            </a>
-            {% if user.id != current_user.id %}
-            <form method="POST" 
-                  action="{{ url_for('admin.user_delete', id=user.id) }}" 
-                  style="flex: 0;"
-                  onsubmit="return confirm('დარწმუნებული ხართ რომ გსურთ წაშლა?');">
-                <button type="submit" class="btn-action delete">
-                    🗑️
-                </button>
-            </form>
-            {% endif %}
-        </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left whitespace-nowrap">
+            <thead class="text-xs text-gray-500 uppercase bg-[#1f1f1f] border-b border-[#333]">
+                <tr>
+                    <th class="px-6 py-4 font-semibold">მომხმარებელი</th>
+                    <th class="px-6 py-4 font-semibold">როლი</th>
+                    <th class="px-6 py-4 font-semibold">კონტაქტი</th>
+                    <th class="px-6 py-4 font-semibold">სტატუსი</th>
+                    <th class="px-6 py-4 text-right">...</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#2a2a2a]">
+                {% for user in users %}
+                <tr class="hover:bg-[#222] transition-colors group">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#B07D4A] to-[#C724B1] flex items-center justify-center text-white font-bold shadow-lg">
+                                {{ user.first_name[0] if user.first_name else user.username[0] }}
+                            </div>
+                            <div>
+                                <div class="font-medium text-white">{{ user.get_full_name() }}</div>
+                                <div class="text-xs text-gray-500">@{{ user.username }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if user.role == 'admin' %}
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-purple-900/30 text-purple-400 border border-purple-800">👑 ადმინი</span>
+                        {% elif user.role == 'barber' %}
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-yellow-900/30 text-yellow-500 border border-yellow-800">✂️ ბარბერი</span>
+                        {% else %}
+                            <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wide bg-blue-900/30 text-blue-400 border border-blue-800">📞 რეცეფცია</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-gray-300">{{ user.email }}</div>
+                        <div class="text-xs text-gray-500">{{ user.phone or '' }}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if user.is_active %}
+                        <span class="flex items-center gap-1.5 text-green-500 text-xs font-medium">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> აქტიური
+                        </span>
+                        {% else %}
+                        <span class="flex items-center gap-1.5 text-red-500 text-xs font-medium">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> დაბლოკილი
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            <a href="{{ url_for('admin.user_edit', id=user.id) }}" class="p-2 rounded-lg bg-[#2a2a2a] text-gray-400 hover:text-white hover:bg-[#333] border border-[#333]">
+                                ✏️
+                            </a>
+                            {% if user.id != current_user.id %}
+                            <form method="POST" action="{{ url_for('admin.user_delete', id=user.id) }}" onsubmit="return confirm('წავშალოთ?');">
+                                <button class="p-2 rounded-lg bg-red-900/20 text-red-500 hover:bg-red-900/40 border border-red-900/50">
+                                    🗑️
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    {% endfor %}
 </div>
-{% else %}
-<div class="empty-state">
-    <div class="empty-state-icon">👥</div>
-    <h3>მომხმარებლები არ მოიძებნა</h3>
-    <p>დაამატეთ პირველი მომხმარებელი რომ დაიწყოთ</p>
-    <br>
-    <a href="{{ url_for('admin.user_create') }}" class="btn-create">
-        <span>➕</span>
-        <span>ახალი მომხმარებელი</span>
-    </a>
-</div>
-{% endif %}
 {% endblock %}

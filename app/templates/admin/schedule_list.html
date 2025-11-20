@@ -1,0 +1,39 @@
+{% extends "admin/base_admin.html" %}
+{% block page_title %}გრაფიკების მართვა{% endblock %}
+
+{% block content %}
+<div class="bg-[#1a1a1a] border border-[#333] rounded-xl overflow-hidden shadow-xl">
+    
+    <div class="p-5 border-b border-[#333] bg-[#111]">
+        <h2 class="text-white font-bold text-lg">აირჩიეთ ბარბერი</h2>
+        <p class="text-xs text-gray-500 mt-1">ვისი გრაფიკის შეცვლა გსურთ?</p>
+    </div>
+
+    <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for barber in barbers %}
+        <a href="{{ url_for('admin.schedule_edit', user_id=barber.id) }}" 
+           class="group block bg-[#222] border border-[#333] rounded-xl p-5 hover:border-[#B07D4A] transition-all hover:-translate-y-1 shadow-lg">
+            
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-[#B07D4A] to-[#C724B1] flex items-center justify-center text-white font-bold text-xl shadow-inner">
+                    {{ barber.first_name[0] if barber.first_name else barber.username[0] }}
+                </div>
+                
+                <div>
+                    <h3 class="font-bold text-white group-hover:text-[#B07D4A] transition-colors">{{ barber.get_full_name() }}</h3>
+                    <p class="text-xs text-gray-500">{{ barber.specialization or 'Barber' }}</p>
+                </div>
+                
+                <div class="ml-auto text-gray-500 group-hover:text-[#B07D4A]">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </div>
+            </div>
+        </a>
+        {% else %}
+        <div class="col-span-full text-center py-10 text-gray-500">
+            ბარბერები არ მოიძებნა
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

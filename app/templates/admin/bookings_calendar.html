@@ -1,908 +1,360 @@
 {% extends "admin/base_admin.html" %}
 
-{% block title %}ჯავშნების კალენდარი{% endblock %}
 {% block page_title %}ჯავშნების კალენდარი{% endblock %}
 
 {% block extra_css %}
-<!-- FullCalendar CSS - ✅ FIXED URL -->
-<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css' rel='stylesheet' />
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css' rel='stylesheet' />
 
 <style>
+    /* 🎨 OPTION 4: PROFESSIONAL MODERN
+     * =====================================
+     * ✅ Dark theme (ნაკლები დაღლილობა)
+     * ✅ Subtle glassmorphism (არა aggressive)
+     * ✅ Functional first, beauty second
+     * ✅ Brand colors (Mad Men identity)
+     * ✅ Fast performance
+     */
+    
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
     :root {
-        --primary-gold: #B07D4A;
-        --secondary-pink: #C724B1;
-        --accent-purple: #8B5CF6;
-        --accent-blue: #3B82F6;
-        --card-bg: #1a1a1a;
-        --card-bg-elevated: #232323;
-        --border-color: #333;
-        --border-color-light: #404040;
-        --text-primary: #ffffff;
-        --text-secondary: #b0b0b0;
-        --danger: #ef4444;
+        /* 🎨 Brand Colors - Mad Men Theme */
+        --brand-primary: #B07D4A;      /* Gold - ძირითადი */
+        --brand-secondary: #8B4513;    /* Brown */
+        --brand-accent: #D4915C;       /* Light Gold */
+        
+        /* 🌓 Background System */
+        --bg-main: #0d1117;            /* GitHub Dark */
+        --bg-elevated: #161b22;        /* Cards */
+        --bg-hover: #1f2937;           /* Hover states */
+        
+        /* 🎯 Functional Colors */
         --success: #10b981;
         --warning: #f59e0b;
+        --danger: #ef4444;
         --info: #3b82f6;
+        
+        /* 📝 Text */
+        --text-primary: #e6edf3;
+        --text-secondary: #8b949e;
+        --text-muted: #6e7681;
+        
+        /* 🔲 Borders & Shadows */
+        --border: #30363d;
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+        --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
 
-    /* 🎨 MODERN GLASSMORPHISM CONTROLS */
-    .calendar-controls {
-        background: linear-gradient(135deg, rgba(176, 125, 74, 0.08), rgba(199, 36, 177, 0.08));
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
+    * {
+        font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    }
+
+    body {
+        background: var(--bg-main);
+        color: var(--text-primary);
+    }
+
+    /* 📦 MAIN LAYOUT */
+    .page-wrapper {
+        max-width: 1800px;
+        margin: 0 auto;
         padding: 24px;
-        margin-bottom: 24px;
+    }
+
+    /* 🎯 TOP CONTROL BAR - Compact & Functional */
+    .control-bar {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        flex-wrap: wrap;
+        justify-content: space-between;
         gap: 16px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        position: relative;
-        overflow: hidden;
+        box-shadow: var(--shadow-sm);
     }
 
-    .calendar-controls::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(176, 125, 74, 0.5), rgba(199, 36, 177, 0.5), transparent);
-        opacity: 0.5;
+    /* 📅 Title - Clean & Professional */
+    .calendar-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-primary);
     }
 
+    .calendar-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+
+    /* 🎛️ CONTROLS - Right Side */
     .calendar-actions {
         display: flex;
         gap: 12px;
         align-items: center;
     }
 
-    .filter-group {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+    /* 👥 Barber Filter - Subtle */
+    .filter-wrapper {
+        position: relative;
     }
 
-    .filter-label {
-        font-size: 14px;
-        color: var(--text-secondary);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .filter-select {
-        padding: 10px 18px;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 12px;
+    .barber-filter {
+        background: var(--bg-main);
+        border: 1px solid var(--border);
         color: var(--text-primary);
-        font-size: 14px;
-        cursor: pointer;
-        min-width: 220px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        font-weight: 500;
-    }
-
-    .filter-select:hover {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: var(--primary-gold);
-        transform: translateY(-1px);
-    }
-
-    .filter-select:focus {
-        outline: none;
-        border-color: var(--primary-gold);
-        box-shadow: 0 0 0 3px rgba(176, 125, 74, 0.15);
-    }
-
-    .btn-calendar {
-        padding: 10px 20px;
-        border-radius: 12px;
-        font-size: 14px;
+        padding: 10px 16px;
+        padding-left: 38px;
+        border-radius: 8px;
         font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--text-secondary);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .btn-calendar::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        background: rgba(176, 125, 74, 0.2);
-        transform: translate(-50%, -50%);
-        transition: width 0.6s, height 0.6s;
-    }
-
-    .btn-calendar:hover::before {
-        width: 300px;
-        height: 300px;
-    }
-
-    .btn-calendar:hover {
-        background: rgba(176, 125, 74, 0.15);
-        border-color: var(--primary-gold);
-        color: var(--primary-gold);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(176, 125, 74, 0.2);
-    }
-
-    .btn-calendar.primary {
-        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
-        border: none;
-        color: white;
-        box-shadow: 0 4px 15px rgba(176, 125, 74, 0.3);
-    }
-
-    .btn-calendar.primary:hover {
-        box-shadow: 0 8px 25px rgba(176, 125, 74, 0.4);
-        transform: translateY(-3px);
-    }
-
-    /* 💡 DRAG & DROP HINT */
-    .calendar-hint {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
-        border: 1px solid rgba(59, 130, 246, 0.3);
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
         font-size: 14px;
-        color: #60a5fa;
-        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        min-width: 220px;
+        appearance: none;
     }
 
-    .calendar-hint span:first-child {
-        font-size: 20px;
-        animation: bounce 2s infinite;
+    .barber-filter:hover {
+        border-color: var(--brand-primary);
+        background: var(--bg-hover);
     }
 
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-5px); }
+    .barber-filter:focus {
+        outline: none;
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 3px rgba(176, 125, 74, 0.1);
     }
 
-    /* 📱 MOBILE SIDEBAR OVERLAY */
-    .sidebar-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(4px);
-        z-index: 998;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .sidebar-overlay.active {
-        display: block;
-        opacity: 1;
-    }
-
-    @media (max-width: 768px) {
-        /* Hide sidebar by default on mobile */
-        .sidebar {
-            position: fixed;
-            left: -280px;
-            top: 0;
-            bottom: 0;
-            width: 280px;
-            z-index: 999;
-            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 2px 0 20px rgba(0, 0, 0, 0.3);
-            overflow-y: auto;
-        }
-
-        /* Show sidebar when active */
-        .sidebar.active {
-            left: 0;
-        }
-
-        /* Adjust main content */
-        .main-content {
-            margin-left: 0 !important;
-            padding-top: 70px; /* Space for fixed header */
-        }
-
-        /* Animate sidebar toggle button */
-        .sidebar.active ~ * .sidebar-toggle-btn svg {
-            transform: rotate(90deg);
-        }
-
-        /* Prevent body scroll when sidebar is open */
-        body.sidebar-open {
-            overflow: hidden;
-        }
-    }
-
-    /* 🎨 MODERN CALENDAR CONTAINER */
-    .calendar-container {
-        background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(35, 35, 35, 0.95));
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 20px;
-        padding: 32px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        position: relative;
-    }
-
-    .calendar-container::before {
-        content: '';
+    .filter-icon {
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        border-radius: 20px;
-        padding: 1px;
-        background: linear-gradient(135deg, rgba(176, 125, 74, 0.2), rgba(199, 36, 177, 0.2));
-        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        font-size: 16px;
         pointer-events: none;
     }
 
-    /* 🎨 FULLCALENDAR MODERN CUSTOMIZATION */
-    .fc {
-        color: var(--text-primary);
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-
-    .fc .fc-button {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        color: var(--text-primary);
-        border-radius: 10px;
-        padding: 8px 16px;
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 12px;
-        letter-spacing: 0.5px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .fc .fc-button:hover {
-        background: rgba(176, 125, 74, 0.2);
-        border-color: var(--primary-gold);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(176, 125, 74, 0.3);
-    }
-
-    .fc .fc-button-primary:not(:disabled).fc-button-active,
-    .fc .fc-button-primary:not(:disabled):active {
-        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
-        border-color: transparent;
-        box-shadow: 0 4px 15px rgba(176, 125, 74, 0.4);
-    }
-
-    .fc .fc-button:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-    }
-
-    /* Today highlight with gradient */
-    .fc .fc-daygrid-day.fc-day-today,
-    .fc .fc-timegrid-col.fc-day-today {
-        background: linear-gradient(135deg, rgba(176, 125, 74, 0.1), rgba(199, 36, 177, 0.05));
-        position: relative;
-    }
-
-    .fc .fc-daygrid-day.fc-day-today::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, var(--primary-gold), var(--secondary-pink));
-        border-radius: 2px 2px 0 0;
-    }
-
-    /* 🎯 MODERN EVENT STYLING */
-    .fc .fc-event {
-        cursor: grab;
-        border-radius: 8px;
+    /* ➕ Create Button - Brand Accent */
+    .btn-create {
+        background: linear-gradient(135deg, var(--brand-primary), var(--brand-accent));
+        color: white;
         border: none;
-        border-left: 4px solid;
-        padding: 6px 10px;
-        font-weight: 500;
-        font-size: 13px;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        overflow: hidden;
-        position: relative;
-        -webkit-user-select: none;
-        user-select: none;
-        touch-action: none;
-    }
-
-    .fc .fc-event::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-
-    .fc .fc-event:hover::before,
-    .fc .fc-event:active::before {
-        opacity: 1;
-    }
-
-    .fc .fc-event:hover {
-        transform: translateY(-4px) scale(1.02);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-        z-index: 10;
-    }
-
-    /* 📱 Mobile touch feedback */
-    @media (max-width: 768px) {
-        .fc .fc-event:active {
-            transform: scale(0.98);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-    }
-
-    .fc .fc-event-dragging {
-        opacity: 0.7;
-        cursor: grabbing !important;
-        transform: scale(1.05);
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
-        z-index: 999 !important;
-    }
-
-    /* Event time styling */
-    .fc .fc-event-time {
+        padding: 10px 20px;
+        border-radius: 8px;
         font-weight: 700;
-        font-size: 11px;
-        opacity: 0.9;
-        letter-spacing: 0.3px;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        box-shadow: 0 2px 8px rgba(176, 125, 74, 0.3);
     }
 
-    .fc .fc-event-title {
-        font-weight: 500;
-        font-size: 12px;
-        margin-top: 2px;
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(176, 125, 74, 0.4);
     }
 
-    /* Grid borders with subtle glow */
-    .fc-theme-standard td,
-    .fc-theme-standard th {
-        border-color: rgba(255, 255, 255, 0.05);
+    .btn-create:active {
+        transform: translateY(0);
     }
 
-    .fc-theme-standard th {
-        border-color: rgba(255, 255, 255, 0.08);
-        font-weight: 600;
-        text-transform: uppercase;
-        font-size: 11px;
-        letter-spacing: 1px;
-        color: var(--text-secondary);
-        padding: 12px 8px;
+    /* 📅 CALENDAR CONTAINER */
+    .calendar-container {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: var(--shadow-md);
+        min-height: calc(100vh - 180px);
     }
 
-    /* Toolbar title with gradient */
+    /* ✅ FULLCALENDAR CUSTOMIZATION */
+    .fc {
+        --fc-border-color: var(--border);
+        --fc-page-bg-color: transparent;
+        --fc-neutral-bg-color: rgba(255, 255, 255, 0.02);
+        --fc-today-bg-color: rgba(176, 125, 74, 0.08);
+    }
+
+    /* 🎯 Toolbar */
+    .fc .fc-toolbar {
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+    }
+
     .fc .fc-toolbar-title {
-        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-size: 28px;
+        color: var(--text-primary);
+        font-size: 20px;
         font-weight: 700;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.3px;
     }
 
-    /* Time grid styling */
-    .fc .fc-timegrid-slot {
-        height: 3.5em;
+    /* 🔘 Buttons - Subtle & Functional */
+    .fc .fc-button-primary {
+        background: var(--bg-main);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        text-transform: capitalize;
+        font-weight: 600;
+        padding: 8px 14px;
+        border-radius: 6px;
+        transition: all 0.2s;
+        font-size: 13px;
     }
 
-    .fc .fc-timegrid-slot-label {
-        border-color: rgba(255, 255, 255, 0.05);
+    .fc .fc-button-primary:hover {
+        background: var(--bg-hover);
+        border-color: var(--brand-primary);
+        color: var(--text-primary);
+    }
+
+    .fc .fc-button-primary:not(:disabled).fc-button-active {
+        background: var(--brand-primary);
+        border-color: var(--brand-primary);
+        color: white;
+    }
+
+    .fc .fc-button-primary:focus {
+        box-shadow: 0 0 0 2px rgba(176, 125, 74, 0.2);
+    }
+
+    /* 📅 Headers */
+    .fc .fc-col-header {
+        background: var(--bg-main);
     }
 
     .fc .fc-col-header-cell {
-        background: rgba(255, 255, 255, 0.02);
+        border-color: var(--border);
+        padding: 12px 4px;
     }
 
-    /* Month view "more" link styling */
-    .fc .fc-daygrid-more-link {
-        color: var(--primary-gold);
-        font-weight: 600;
-        background: rgba(176, 125, 74, 0.1);
-        padding: 4px 8px;
-        border-radius: 6px;
-        margin-top: 4px;
-        display: inline-block;
-        transition: all 0.3s;
-    }
-
-    .fc .fc-daygrid-more-link:hover {
-        background: rgba(176, 125, 74, 0.2);
-        transform: scale(1.05);
-    }
-
-    /* 🎨 MODERN MODAL STYLES */
-    .modal-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.85);
-        z-index: 9999;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-    }
-
-    .modal-overlay.active {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .modal-content {
-        background: linear-gradient(135deg, rgba(26, 26, 26, 0.98), rgba(35, 35, 35, 0.98));
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        padding: 36px;
-        max-width: 650px;
-        width: 90%;
-        max-height: 90vh;
-        overflow-y: auto;
-        animation: slideUpScale 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
-        position: relative;
-    }
-
-    .modal-content::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, var(--primary-gold), var(--secondary-pink), transparent);
-        opacity: 0.6;
-    }
-
-    /* Custom scrollbar for modal */
-    .modal-content::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    .modal-content::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 4px;
-    }
-
-    .modal-content::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, var(--primary-gold), var(--secondary-pink));
-        border-radius: 4px;
-    }
-
-    .modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 28px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .modal-title {
-        font-size: 24px;
-        font-weight: 700;
-        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        letter-spacing: -0.5px;
-    }
-
-    .modal-close {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 18px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .modal-close:hover {
-        background: rgba(239, 68, 68, 0.2);
-        border-color: var(--danger);
-        transform: rotate(90deg);
-    }
-
-    .modal-body {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-    }
-
-    .detail-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        transition: all 0.3s;
-    }
-
-    .detail-row:hover {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(176, 125, 74, 0.3);
-        transform: translateX(4px);
-    }
-
-    .detail-label {
-        font-size: 13px;
+    .fc .fc-col-header-cell-cushion {
         color: var(--text-secondary);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .detail-value {
-        font-size: 15px;
-        color: var(--text-primary);
-        font-weight: 500;
-    }
-
-    /* 🎨 MODERN STATUS BADGES */
-    .status-badge {
-        padding: 6px 16px;
-        border-radius: 8px;
+        font-weight: 700;
         font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* 🕐 Time Labels */
+    .fc .fc-timegrid-slot-label-cushion {
+        color: var(--text-muted);
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .fc .fc-timegrid-slot {
+        border-color: var(--border);
+    }
+
+    /* 🎯 EVENTS - Clean & Readable */
+    .fc-event {
+        border: none !important;
+        border-left: 3px solid !important;
+        border-radius: 4px !important;
+        padding: 4px 8px !important;
+        font-weight: 600 !important;
+        backdrop-filter: blur(10px);
+        transition: all 0.15s ease !important;
+        cursor: pointer !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .fc-event:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        filter: brightness(1.1);
+    }
+
+    .fc-event-time {
+        font-size: 11px;
         font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        opacity: 0.95;
     }
 
-    .status-badge::before {
-        content: '';
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: currentColor;
-        box-shadow: 0 0 8px currentColor;
-        animation: pulse 2s infinite;
-    }
-
-    .status-badge.status-pending { 
-        background: linear-gradient(135deg, #f59e0b, #d97706); 
-        color: white;
-    }
-    
-    .status-badge.status-confirmed { 
-        background: linear-gradient(135deg, #10b981, #059669); 
-        color: white;
-    }
-    
-    .status-badge.status-completed { 
-        background: linear-gradient(135deg, #3b82f6, #2563eb); 
-        color: white;
-    }
-    
-    .status-badge.status-cancelled { 
-        background: linear-gradient(135deg, #6b7280, #4b5563); 
-        color: white;
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-
-    /* 🎨 MODAL ACTION BUTTONS */
-    .modal-actions {
-        display: flex;
-        gap: 12px;
-        margin-top: 24px;
-        padding-top: 24px;
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .btn-modal {
-        flex: 1;
-        padding: 14px 24px;
-        border-radius: 12px;
-        font-size: 14px;
+    .fc-event-title {
+        font-size: 12px;
         font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 2px solid rgba(255, 255, 255, 0.1);
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--text-primary);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        margin-top: 2px;
     }
 
-    .btn-modal.btn-primary {
-        background: linear-gradient(135deg, var(--primary-gold), var(--secondary-pink));
-        border: none;
-        color: white;
-        box-shadow: 0 4px 15px rgba(176, 125, 74, 0.3);
-    }
-
-    .btn-modal.btn-primary:hover {
-        box-shadow: 0 8px 25px rgba(176, 125, 74, 0.4);
-        transform: translateY(-3px);
-    }
-
-    .btn-modal.btn-edit {
-        background: rgba(59, 130, 246, 0.1);
-        border-color: #3b82f6;
-        color: #60a5fa;
-    }
-
-    .btn-modal.btn-edit:hover {
-        background: rgba(59, 130, 246, 0.2);
-        box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
-        transform: translateY(-3px);
-    }
-
-    .btn-modal.btn-delete {
-        background: rgba(239, 68, 68, 0.1);
+    /* 🔥 Current Time Indicator */
+    .fc .fc-timegrid-now-indicator-line {
         border-color: var(--danger);
-        color: #f87171;
+        border-width: 2px;
     }
 
-    .btn-modal.btn-delete:hover {
-        background: rgba(239, 68, 68, 0.2);
-        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
-        transform: translateY(-3px);
+    .fc .fc-timegrid-now-indicator-arrow {
+        border-color: var(--danger);
+        border-width: 6px;
     }
 
-    .btn-modal:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    /* ✂️ RESOURCE SIDEBAR - Clean & Organized */
+    .fc-datagrid-cell {
+        background: var(--bg-main) !important;
+        border-color: var(--border) !important;
     }
 
-    /* 🎨 MODERN FORM STYLES */
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    .form-label {
-        display: block;
-        font-size: 13px;
+    .fc-datagrid-cell-cushion {
+        color: var(--text-primary) !important;
         font-weight: 600;
-        color: var(--text-secondary);
-        margin-bottom: 10px;
+        padding: 14px 12px;
+        font-size: 13px;
+    }
+
+    .fc-resource-timeline-divider {
+        background: var(--bg-main) !important;
+        border-right: 2px solid var(--brand-primary) !important;
+    }
+
+    /* 🎯 Resource Header */
+    .fc-datagrid-header .fc-datagrid-cell-cushion {
+        color: var(--brand-primary) !important;
+        font-weight: 700;
+        font-size: 12px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.8px;
     }
 
-    .form-input {
-        width: 100%;
-        padding: 14px 18px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 2px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        color: var(--text-primary);
-        font-size: 15px;
-        font-weight: 500;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .form-input:hover {
-        background: rgba(255, 255, 255, 0.07);
-        border-color: rgba(176, 125, 74, 0.3);
-    }
-
-    .form-input:focus {
-        outline: none;
-        border-color: var(--primary-gold);
-        background: rgba(176, 125, 74, 0.08);
-        box-shadow: 0 0 0 4px rgba(176, 125, 74, 0.1);
-        transform: translateY(-2px);
-    }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-    }
-
-    .form-actions {
-        display: flex;
-        gap: 12px;
-        margin-top: 24px;
-    }
-
-    /* 🎨 ANIMATIONS */
-    @keyframes fadeIn {
-        from { 
-            opacity: 0;
-            backdrop-filter: blur(0px);
-        }
-        to { 
-            opacity: 1;
-            backdrop-filter: blur(12px);
-        }
-    }
-
-    @keyframes slideUpScale {
-        from {
-            opacity: 0;
-            transform: translateY(30px) scale(0.95);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-    }
-
-    /* ⚡ LOADING STATES */
-    #calendar-loader {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 60px 20px;
-        font-size: 16px;
-        color: var(--text-secondary);
-    }
-
-    #calendar-loader::after {
-        content: '';
-        width: 20px;
-        height: 20px;
-        border: 3px solid rgba(176, 125, 74, 0.2);
-        border-top-color: var(--primary-gold);
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-        margin-left: 12px;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    /* 📢 Toast Notification System */
-    .toast {
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%) translateY(-100px);
-        background: #1a1a1a;
-        color: white;
-        padding: 15px 20px;
-        border-radius: 12px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        z-index: 10000;
-        min-width: 350px;
-        max-width: 500px;
-        opacity: 0;
-        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    }
-
-    .toast.show {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-
-    .toast-icon {
-        font-size: 24px;
-        flex-shrink: 0;
-    }
-
-    .toast-message {
-        flex: 1;
-        font-size: 14px;
-        line-height: 1.5;
-        font-weight: 500;
-    }
-
-    .toast-success {
-        background: linear-gradient(135deg, #10b981, #059669);
-        border-left: 4px solid #34d399;
-    }
-
-    .toast-error {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        border-left: 4px solid #f87171;
-    }
-
-    .toast-info {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        border-left: 4px solid #60a5fa;
-    }
-
-    .toast-warning {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        border-left: 4px solid #fbbf24;
-    }
-
-    .toast.removing {
-        animation: slideOut 0.3s ease forwards;
-    }
-
-    @keyframes slideOut {
-        to {
-            opacity: 0;
-            transform: translateX(-50%) translateY(-100px);
-        }
-    }
-
-    /* 🎨 RESPONSIVE DESIGN */
+    /* 📱 MOBILE RESPONSIVE */
     @media (max-width: 768px) {
-        .calendar-controls {
+        .page-wrapper {
+            padding: 12px;
+        }
+
+        .control-bar {
             flex-direction: column;
             align-items: stretch;
-            padding: 16px;
-        }
-        
-        .filter-group {
-            width: 100%;
-        }
-
-        .filter-select {
-            width: 100%;
+            padding: 12px 16px;
         }
 
         .calendar-actions {
+            flex-direction: column;
             width: 100%;
-            justify-content: stretch;
         }
 
-        .btn-calendar {
-            flex: 1;
+        .barber-filter,
+        .btn-create {
+            width: 100%;
             justify-content: center;
         }
-        
-        .form-row {
-            grid-template-columns: 1fr;
-        }
 
-        .modal-content {
-            padding: 24px;
-            border-radius: 16px;
+        .calendar-container {
+            padding: 12px;
         }
 
         .fc .fc-toolbar {
@@ -913,143 +365,109 @@
         .fc .fc-toolbar-chunk {
             display: flex;
             justify-content: center;
-            width: 100%;
+            gap: 6px;
         }
 
         .fc .fc-toolbar-title {
-            font-size: 20px;
-        }
-
-        .fc .fc-button {
-            padding: 10px 14px;
-            font-size: 11px;
-        }
-
-        .calendar-hint {
-            font-size: 13px;
-            padding: 12px 16px;
-        }
-
-        /* Smaller event cards on mobile */
-        .fc .fc-event {
-            font-size: 11px;
-            padding: 4px 8px;
-        }
-
-        .fc .fc-event-time {
-            font-size: 10px;
-        }
-
-        .fc .fc-event-title {
-            font-size: 11px;
-        }
-    }
-
-    /* 📱 MOBILE OPTIMIZATIONS */
-    @media (max-width: 480px) {
-        .calendar-container {
-            padding: 16px;
-            border-radius: 16px;
-        }
-
-        .modal-content {
-            width: 95%;
-            padding: 20px;
-        }
-
-        .modal-title {
             font-size: 18px;
         }
+    }
 
-        .btn-modal {
-            padding: 12px 16px;
-            font-size: 12px;
-        }
+    /* 🎨 BARBER COLORS - Distinct & Professional */
+    .barber-1 { 
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important; 
+        border-left-color: #1e40af !important;
+    }
+    .barber-2 { 
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+        border-left-color: #6d28d9 !important;
+    }
+    .barber-3 { 
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%) !important;
+        border-left-color: #be185d !important;
+    }
+    .barber-4 { 
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+        border-left-color: #b45309 !important;
+    }
+    .barber-5 { 
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+        border-left-color: #047857 !important;
+    }
+    .barber-6 { 
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+        border-left-color: #b91c1c !important;
+    }
 
-        .fc .fc-toolbar {
-            flex-direction: column;
-            gap: 12px;
-        }
+    /* 🎭 LOADING STATE */
+    .fc-loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
 
-        .fc .fc-toolbar-chunk {
-            display: flex;
-            justify-content: center;
-        }
+    /* ⚡ PERFORMANCE OPTIMIZATIONS */
+    * {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    .fc-event {
+        will-change: transform;
+    }
+
+    /* 🎯 ACCESSIBILITY */
+    .fc-button:focus-visible {
+        outline: 2px solid var(--brand-primary);
+        outline-offset: 2px;
+    }
+
+    .barber-filter:focus-visible {
+        outline: 2px solid var(--brand-primary);
+        outline-offset: 2px;
     }
 </style>
+
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar-scheduler@6.1.10/index.global.min.js'></script>
+<script src="{{ url_for('static', filename='js/admin-calendar.js') }}"></script>
 {% endblock %}
 
 {% block content %}
-<!-- Calendar Controls -->
-<div class="calendar-controls">
-    <div class="calendar-actions">
-        {% if current_user.is_admin() or current_user.is_reception() %}
-        <div class="filter-group">
-            <label class="filter-label">ბარბერი:</label>
-            <select id="barberFilter" class="filter-select">
-                <option value="all">ყველა ბარბერი</option>
-                {% for barber in barbers %}
-                <option value="{{ barber.id }}">{{ barber.get_full_name() }}</option>
-                {% endfor %}
-            </select>
+<div class="page-wrapper">
+    <!-- 🎯 Control Bar - Simple & Functional -->
+    <div class="control-bar">
+        <div class="calendar-title">
+            <div class="calendar-icon">📅</div>
+            <span>ჯავშნების კალენდარი</span>
         </div>
-        {% endif %}
+
+        <div class="calendar-actions">
+            <!-- 👥 Barber Filter -->
+            <div class="filter-wrapper">
+                <span class="filter-icon">👤</span>
+                <select id="barberFilter" class="barber-filter">
+                    <option value="all">ყველა ბარბერი</option>
+                    {% for barber in barbers %}
+                    <option value="{{ barber.id }}">{{ barber.get_full_name() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- ➕ Create Button -->
+            <button onclick="showCreateBookingModal(new Date().toISOString())" class="btn-create">
+                <span>➕</span>
+                <span>ახალი ჯავშანი</span>
+            </button>
+        </div>
     </div>
 
-    <div class="calendar-actions">
-        <a href="{{ url_for('admin.bookings_list') }}" class="btn-calendar">
-            📋 ცხრილის ხედი
-        </a>
-    </div>
-</div>
-
-{% if current_user.is_admin() or current_user.is_reception() %}
-<div class="calendar-hint" id="dragDropHint">
-    <span>💡</span>
-    <strong>Drag & Drop ფუნქცია ჩართულია - გადაათრიე ჯავშანები კალენდარში მარტივად!</strong>
-</div>
-
-<script>
-// 📱 Hide drag hint on mobile
-if (window.innerWidth < 768) {
-    document.getElementById('dragDropHint').style.display = 'none';
-}
-</script>
-{% endif %}
-
-<!-- Calendar Container -->
-<div class="calendar-container">
-    <div id="calendar-loader" style="display: none;">ჩატვირთვა</div>
-    <div id="booking-calendar"></div>
-</div>
-
-<!-- MODAL 1: Event Details -->
-<div id="eventDetailsModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title">ჯავშნის დეტალები</h3>
-            <button class="modal-close" onclick="closeAllModals()">✕</button>
-        </div>
-        <div class="modal-body" id="detailsModalBody">
-            <!-- Populated by JavaScript -->
-        </div>
+    <!-- 📅 Calendar -->
+    <div class="calendar-container">
+        <div id="booking-calendar"></div>
     </div>
 </div>
 
-<!-- MODAL 2: Create Booking -->
-<div id="createBookingModal" class="modal-overlay">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 class="modal-title">ახალი ჯავშნის შექმნა</h3>
-            <button class="modal-close" onclick="closeAllModals()">✕</button>
-        </div>
-        <div class="modal-body" id="createModalBody">
-            <!-- Populated by JavaScript -->
-        </div>
-    </div>
+<!-- 🎭 Event Details Modal -->
+<div id="eventDetailsModal" class="modal-overlay hidden">
+    <div id="detailsModalBody"></div>
 </div>
-
-<!-- FullCalendar JS -->
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-<script src="{{ url_for('static', filename='js/admin-calendar.js') }}"></script>
 {% endblock %}

@@ -1,0 +1,65 @@
+{% extends "admin/base_admin.html" %}
+{% block page_title %}კლიენტები{% endblock %}
+
+{% block content %}
+<div class="bg-[#1a1a1a] border border-[#333] rounded-xl overflow-hidden shadow-xl">
+    
+    <div class="p-5 border-b border-[#333] flex flex-col sm:flex-row justify-between items-center gap-4 bg-[#111]">
+        <div>
+            <h2 class="text-white font-bold text-lg">კლიენტების ბაზა</h2>
+            <p class="text-xs text-gray-500 mt-1">სულ: {{ clients|length }} კლიენტი</p>
+        </div>
+        <input type="text" id="clientSearch" onkeyup="filterClients()" placeholder="🔍 ძებნა..." class="w-full sm:w-64 bg-[#222] border border-[#333] text-white rounded-xl px-4 py-2 focus:border-[#B07D4A] outline-none text-sm">
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left whitespace-nowrap">
+            <thead class="text-xs text-gray-500 uppercase bg-[#1f1f1f] border-b border-[#333]">
+                <tr>
+                    <th class="px-6 py-4">სახელი</th>
+                    <th class="px-6 py-4">ტელეფონი</th>
+                    <th class="px-6 py-4 text-center">ვიზიტები</th>
+                    <th class="px-6 py-4 text-center">სტატუსი</th>
+                    <th class="px-6 py-4 text-right">...</th>
+                </tr>
+            </thead>
+            <tbody id="clientsTableBody" class="divide-y divide-[#2a2a2a]">
+                {% for client in clients %}
+                <tr class="hover:bg-[#222] transition-colors client-row group">
+                    <td class="px-6 py-4">
+                        <div class="font-medium text-white client-name">{{ client.name }}</div>
+                        <div class="text-xs text-gray-500">{{ client.email or '' }}</div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-300 font-mono client-phone">{{ client.phone }}</td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="bg-[#2a2a2a] text-white px-2 py-1 rounded text-xs border border-[#444]">{{ client.bookings|length }}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        {% if client.is_blocked %}
+                            <span class="text-red-500 text-[10px] font-bold bg-red-900/20 px-2 py-1 rounded border border-red-900/50">BLOCKED</span>
+                        {% else %}
+                            <span class="text-green-500 text-[10px] font-bold bg-green-900/20 px-2 py-1 rounded border border-green-900/50">OK</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <a href="{{ url_for('admin.client_edit', id=client.id) }}" class="text-[#B07D4A] hover:text-white p-2">✏️</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function filterClients() {
+    const filter = document.getElementById('clientSearch').value.toLowerCase();
+    const rows = document.getElementsByClassName('client-row');
+    for (let row of rows) {
+        const name = row.querySelector('.client-name').textContent.toLowerCase();
+        const phone = row.querySelector('.client-phone').textContent.toLowerCase();
+        row.style.display = (name.includes(filter) || phone.includes(filter)) ? "" : "none";
+    }
+}
+</script>
+{% endblock %}

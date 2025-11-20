@@ -71,37 +71,6 @@
         padding: 80px 30px;
     }
     
-    /* Team Stats */
-    .team-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 30px;
-        margin-bottom: 80px;
-        background: #1a1a1a;
-        border-radius: 20px;
-        padding: 40px;
-    }
-    
-    .stat-box {
-        text-align: center;
-        padding: 20px;
-    }
-    
-    .stat-number {
-        font-size: 42px;
-        font-weight: 700;
-        background: linear-gradient(135deg, #B07D4A, #C724B1);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 10px;
-    }
-    
-    .stat-label {
-        color: #999;
-        font-size: 15px;
-    }
-    
     /* Barbers Grid */
     .barbers-grid {
         display: grid;
@@ -117,6 +86,8 @@
         overflow: hidden;
         transition: all 0.4s ease;
         position: relative;
+        display: flex;
+        flex-direction: column;
     }
     
     .barber-card::before {
@@ -181,15 +152,15 @@
         color: #4CAF50;
         border-color: #4CAF50;
     }
+
     
-    .status-busy {
-        color: #FF9800;
-        border-color: #FF9800;
-    }
     
     /* Barber Info */
     .barber-info {
         padding: 30px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
     }
     
     .barber-name {
@@ -211,6 +182,7 @@
         line-height: 1.7;
         margin-bottom: 20px;
         font-size: 15px;
+        flex-grow: 1;
     }
     
     /* Experience Row */
@@ -267,6 +239,7 @@
     .barber-actions {
         display: flex;
         gap: 10px;
+        margin-top: auto;
     }
     
     .btn-book-barber {
@@ -286,25 +259,6 @@
     .btn-book-barber:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(183, 125, 74, 0.4);
-    }
-    
-    .btn-portfolio {
-        width: 50px;
-        height: 50px;
-        background: rgba(183, 125, 74, 0.1);
-        border: 1px solid #B07D4A;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        font-size: 20px;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-portfolio:hover {
-        background: rgba(183, 125, 74, 0.2);
-        transform: translateY(-2px);
     }
     
     /* Rating */
@@ -394,299 +348,78 @@
         .barbers-grid {
             grid-template-columns: 1fr;
         }
-        
-        .team-stats {
-            grid-template-columns: repeat(2, 1fr);
-        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- Page Header -->
 <section class="page-header">
     <div class="page-header-content">
         <div class="page-badge">👨‍🎨 ჩვენი გუნდი</div>
         <h1>გაიცანი MAD-MEN-ის მასტერები</h1>
-        <p>ჩვენი გუნდი შედგება გამოცდილი და პროფესიონალი ბარბერებისგან, რომლებიც გატაცებულნი არიან თავიანთი საქმით და მზად არიან შექმნან თქვენთვის სრულყოფილი სტილი.</p>
+        <p>ჩვენი გუნდი შედგება გამოცდილი და პროფესიონალი ბარბერებისგან, რომლებიც გატაცებულნი არიან თავიანთი საქმით.</p>
     </div>
 </section>
 
 <div class="barbers-container">
     
-    <!-- Team Stats -->
-    <div class="team-stats">
-        <div class="stat-box">
-            <div class="stat-number">12</div>
-            <div class="stat-label">პროფესიონალი ბარბერი</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-number">50+</div>
-            <div class="stat-label">წლიანი ერთობლივი გამოცდილება</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-number">8000+</div>
-            <div class="stat-label">კმაყოფილი კლიენტი</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-number">99%</div>
-            <div class="stat-label">დადებითი შეფასება</div>
-        </div>
-    </div>
-    
-    <!-- Barbers Grid -->
     <div class="barbers-grid">
-        
-        <!-- Barber 1 - Senior Master -->
+        {% for barber in barbers %}
         <div class="barber-card">
             <div class="barber-image-container">
-                <img src="https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=500&h=700&fit=crop" alt="გიორგი მელაძე" class="barber-image">
+                {% if barber.image_url %}
+                    <img src="{{ url_for('static', filename=barber.image_url) }}" alt="{{ barber.name }}" class="barber-image">
+                {% else %}
+                    <div style="width: 100%; height: 100%; background: #222; display: flex; align-items: center; justify-content: center; font-size: 80px; color: #444;">
+                        {{ barber.name[0] }}
+                    </div>
+                {% endif %}
+                
                 <span class="status-badge status-available">● ხელმისაწვდომი</span>
             </div>
+            
             <div class="barber-info">
-                <h3 class="barber-name">გიორგი მელაძე</h3>
-                <p class="barber-position">🏆 უფროსი მასტერი ბარბერი</p>
+                <h3 class="barber-name">{{ barber.name }}</h3>
+                <p class="barber-position">{{ barber.position or 'Barber' }}</p>
                 
                 <div class="barber-rating">
                     <span class="stars">★★★★★</span>
-                    <span class="rating-text">(250+ შეფასება)</span>
+                    <span class="rating-text">({{ barber.rating or 5.0 }})</span>
                 </div>
                 
                 <p class="barber-description">
-                    15 წლიანი გამოცდილების მქონე პროფესიონალი, კლასიკური და თანამედროვე სტილების ექსპერტი. სერთიფიცირებული საერთაშორისო აკადემიებში.
+                    {{ barber.bio or 'გამოცდილი პროფესიონალი, რომელიც ზრუნავს თქვენს იმიჯზე.' }}
                 </p>
                 
                 <div class="experience-row">
                     <span class="experience-icon">📅</span>
                     <div class="experience-info">
                         <div class="experience-label">გამოცდილება</div>
-                        <div class="experience-value">15 წელი</div>
+                        <div class="experience-value">{{ barber.experience_years or 1 }} წელი</div>
                     </div>
                 </div>
                 
+                {% if barber.specialties %}
                 <div class="specialties">
-                    <span class="specialty-tag">კლასიკური შეჭრა</span>
-                    <span class="specialty-tag">წვერის მოვლა</span>
-                    <span class="specialty-tag">ფეიდი</span>
-                    <span class="specialty-tag">ტრადიციული გაპარსვა</span>
+                    {% for spec in barber.specialties.split(',') %}
+                    <span class="specialty-tag">{{ spec.strip() }}</span>
+                    {% endfor %}
                 </div>
+                {% endif %}
                 
                 <div class="barber-actions">
-                    <a href="/booking?barber=giorgi" class="btn-book-barber">დაჯავშნა</a>
-                    <a href="#" class="btn-portfolio">📸</a>
+                    <a href="javascript:void(0)" onclick="bookSpecificBarber({{ barber.user_id }})" class="btn-book-barber">დაჯავშნა</a>
                 </div>
             </div>
         </div>
-        
-        <!-- Barber 2 -->
-        <div class="barber-card">
-            <div class="barber-image-container">
-                <img src="https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=500&h=700&fit=crop" alt="ლუკა ბერიძე" class="barber-image">
-                <span class="status-badge status-available">● ხელმისაწვდომი</span>
+        {% else %}
+            <div style="grid-column: 1/-1; text-align: center; padding: 50px; color: #666;">
+                <h3>ბარბერები ჯერ არ დამატებულა</h3>
             </div>
-            <div class="barber-info">
-                <h3 class="barber-name">ლუკა ბერიძე</h3>
-                <p class="barber-position">✨ სტილისტ ბარბერი</p>
-                
-                <div class="barber-rating">
-                    <span class="stars">★★★★★</span>
-                    <span class="rating-text">(180+ შეფასება)</span>
-                </div>
-                
-                <p class="barber-description">
-                    10 წლიანი გამოცდილება თანამედროვე და კრეატიული სტილების შექმნაში. სპეციალიზირებულია ჰეირ დიზაინსა და ტრენდულ შეჭრებში.
-                </p>
-                
-                <div class="experience-row">
-                    <span class="experience-icon">📅</span>
-                    <div class="experience-info">
-                        <div class="experience-label">გამოცდილება</div>
-                        <div class="experience-value">10 წელი</div>
-                    </div>
-                </div>
-                
-                <div class="specialties">
-                    <span class="specialty-tag">თანამედროვე სტილები</span>
-                    <span class="specialty-tag">ჰეირ დიზაინი</span>
-                    <span class="specialty-tag">ფეიდი</span>
-                    <span class="specialty-tag">ხაზები</span>
-                </div>
-                
-                <div class="barber-actions">
-                    <a href="/booking?barber=luka" class="btn-book-barber">დაჯავშნა</a>
-                    <a href="#" class="btn-portfolio">📸</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Barber 3 -->
-        <div class="barber-card">
-            <div class="barber-image-container">
-                <img src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=500&h=700&fit=crop" alt="ნიკა ღვინიაშვილი" class="barber-image">
-                <span class="status-badge status-busy">● დაკავებულია</span>
-            </div>
-            <div class="barber-info">
-                <h3 class="barber-name">ნიკა ღვინიაშვილი</h3>
-                <p class="barber-position">🎨 არტისტ ბარბერი</p>
-                
-                <div class="barber-rating">
-                    <span class="stars">★★★★★</span>
-                    <span class="rating-text">(200+ შეფასება)</span>
-                </div>
-                
-                <p class="barber-description">
-                    12 წლიანი გამოცდილება. სპეციალიზირებულია კრეატიულ დიზაინსა და არტისტულ შეჭრებში. მონაწილეობდა საერთაშორისო კონკურსებში.
-                </p>
-                
-                <div class="experience-row">
-                    <span class="experience-icon">📅</span>
-                    <div class="experience-info">
-                        <div class="experience-label">გამოცდილება</div>
-                        <div class="experience-value">12 წელი</div>
-                    </div>
-                </div>
-                
-                <div class="specialties">
-                    <span class="specialty-tag">არტისტული შეჭრა</span>
-                    <span class="specialty-tag">პატერნები</span>
-                    <span class="specialty-tag">ჰეირ ტატუ</span>
-                    <span class="specialty-tag">კრეატიული დიზაინი</span>
-                </div>
-                
-                <div class="barber-actions">
-                    <a href="/booking?barber=nika" class="btn-book-barber">დაჯავშნა</a>
-                    <a href="#" class="btn-portfolio">📸</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Barber 4 -->
-        <div class="barber-card">
-            <div class="barber-image-container">
-                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=700&fit=crop" alt="დავითი ჩხეიძე" class="barber-image">
-                <span class="status-badge status-available">● ხელმისაწვდომი</span>
-            </div>
-            <div class="barber-info">
-                <h3 class="barber-name">დავით ჩხეიძე</h3>
-                <p class="barber-position">💈 კლასიკური ბარბერი</p>
-                
-                <div class="barber-rating">
-                    <span class="stars">★★★★★</span>
-                    <span class="rating-text">(170+ შეფასება)</span>
-                </div>
-                
-                <p class="barber-description">
-                    8 წლიანი გამოცდილება კლასიკურ ბარბერინგში. ექსპერტი ტრადიციულ გაპარსვასა და წვერის მოვლაში. იყენებს ძველ სკოლის ტექნიკებს.
-                </p>
-                
-                <div class="experience-row">
-                    <span class="experience-icon">📅</span>
-                    <div class="experience-info">
-                        <div class="experience-label">გამოცდილება</div>
-                        <div class="experience-value">8 წელი</div>
-                    </div>
-                </div>
-                
-                <div class="specialties">
-                    <span class="specialty-tag">კლასიკური სტილი</span>
-                    <span class="specialty-tag">წვერის მოვლა</span>
-                    <span class="specialty-tag">სტრეიტ რეზორი</span>
-                    <span class="specialty-tag">ტრადიციული გაპარსვა</span>
-                </div>
-                
-                <div class="barber-actions">
-                    <a href="/booking?barber=davit" class="btn-book-barber">დაჯავშნა</a>
-                    <a href="#" class="btn-portfolio">📸</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Barber 5 -->
-        <div class="barber-card">
-            <div class="barber-image-container">
-                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&h=700&fit=crop" alt="გიგა კვარაცხელია" class="barber-image">
-                <span class="status-badge status-available">● ხელმისაწვდომი</span>
-            </div>
-            <div class="barber-info">
-                <h3 class="barber-name">გიგა კვარაცხელია</h3>
-                <p class="barber-position">⚡ ფეიდ სპეციალისტი</p>
-                
-                <div class="barber-rating">
-                    <span class="stars">★★★★★</span>
-                    <span class="rating-text">(150+ შეფასება)</span>
-                </div>
-                
-                <p class="barber-description">
-                    7 წლიანი გამოცდილება. სპეციალიზირებულია ყველა ტიპის ფეიდში - low, mid, high fade. სწრაფი და ზუსტი მუშაობა.
-                </p>
-                
-                <div class="experience-row">
-                    <span class="experience-icon">📅</span>
-                    <div class="experience-info">
-                        <div class="experience-label">გამოცდილება</div>
-                        <div class="experience-value">7 წელი</div>
-                    </div>
-                </div>
-                
-                <div class="specialties">
-                    <span class="specialty-tag">Low Fade</span>
-                    <span class="specialty-tag">Mid Fade</span>
-                    <span class="specialty-tag">High Fade</span>
-                    <span class="specialty-tag">Skin Fade</span>
-                </div>
-                
-                <div class="barber-actions">
-                    <a href="/booking?barber=giga" class="btn-book-barber">დაჯავშნა</a>
-                    <a href="#" class="btn-portfolio">📸</a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Barber 6 -->
-        <div class="barber-card">
-            <div class="barber-image-container">
-                <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500&h=700&fit=crop" alt="ბექა გელაშვილი" class="barber-image">
-                <span class="status-badge status-available">● ხელმისაწვდომი</span>
-            </div>
-            <div class="barber-info">
-                <h3 class="barber-name">ბექა გელაშვილი</h3>
-                <p class="barber-position">👶 ბავშვების ბარბერი</p>
-                
-                <div class="barber-rating">
-                    <span class="stars">★★★★★</span>
-                    <span class="rating-text">(130+ შეფასება)</span>
-                </div>
-                
-                <p class="barber-description">
-                    6 წლიანი გამოცდილება ბავშვებთან მუშაობაში. მოთმინებიანი და მეგობრული მიდგომა. ყველა ასაკის ბავშვებთან უშვებს საერთო ენას.
-                </p>
-                
-                <div class="experience-row">
-                    <span class="experience-icon">📅</span>
-                    <div class="experience-info">
-                        <div class="experience-label">გამოცდილება</div>
-                        <div class="experience-value">6 წელი</div>
-                    </div>
-                </div>
-                
-                <div class="specialties">
-                    <span class="specialty-tag">ბავშვების შეჭრა</span>
-                    <span class="specialty-tag">მოთმინება</span>
-                    <span class="specialty-tag">პრემიერული შეჭრა</span>
-                    <span class="specialty-tag">სპეც. მიდგომა</span>
-                </div>
-                
-                <div class="barber-actions">
-                    <a href="/booking?barber=beka" class="btn-book-barber">დაჯავშნა</a>
-                    <a href="#" class="btn-portfolio">📸</a>
-                </div>
-            </div>
-        </div>
-        
+        {% endfor %}
     </div>
     
-    <!-- Join Team Section -->
     <div class="join-team-section">
         <div class="join-content">
             <h2>გინდა შემოუერთდე ჩვენს გუნდს?</h2>
@@ -698,5 +431,13 @@
     </div>
     
 </div>
+
+<script>
+function bookSpecificBarber(id) {
+    // ინახავს არჩეულ ID-ს და გადადის ბუქინგზე
+    localStorage.setItem('preSelectedBarber', id);
+    window.location.href = '/booking';
+}
+</script>
 
 {% endblock %}

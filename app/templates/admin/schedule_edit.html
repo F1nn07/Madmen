@@ -1,0 +1,274 @@
+{% extends "admin/base_admin.html" %}
+
+{% block page_title %}გრაფიკის რედაქტირება{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+<style>
+    .flatpickr-calendar {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    /* ყვითელი ფერები კალენდრისთვის */
+    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange, .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover {
+        background: #ca8a04 !important;
+        border-color: #ca8a04 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto max-w-5xl pb-32">
+    
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+                <span class="bg-gradient-to-r from-yellow-600 to-yellow-500 text-white w-10 h-10 rounded-lg flex items-center justify-center text-lg shadow-lg">📅</span>
+                <span>{{ user.get_full_name() }}</span>
+            </h2>
+            <p class="text-gray-400 mt-1 text-sm">მართეთ სამუშაო საათები და შვებულება</p>
+        </div>
+        
+        {% if current_user.is_admin() or current_user.is_reception() %}
+        <a href="{{ url_for('admin.schedule_index') }}" 
+           class="inline-flex items-center px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-300 hover:text-white transition-all text-sm">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            უკან
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="bg-[#1a1a1a] border border-gray-700 rounded-xl p-4 mb-8 flex flex-wrap gap-3 items-center justify-between shadow-lg relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-1 h-full bg-yellow-600"></div>
+        
+        <span class="text-sm font-bold text-gray-400 uppercase tracking-wider ml-2">სწრაფი მენიუ:</span>
+        
+        <div class="flex flex-wrap gap-2">
+            <button type="button" onclick="applyStandardSchedule()" 
+                    class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs rounded-lg border border-gray-600 transition-colors flex items-center gap-2">
+                👔 სტანდარტული (10:00-19:00)
+            </button>
+            <button type="button" onclick="copyMondayToWeekdays()" 
+                    class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-yellow-500 text-xs rounded-lg border border-gray-600 transition-colors flex items-center gap-2">
+                ⚡️ ორშაბათის კოპირება (ორშ-პარ)
+            </button>
+            <button type="button" onclick="clearAllDays()" 
+                    class="px-3 py-1.5 bg-gray-800 hover:bg-red-900/30 text-red-400 text-xs rounded-lg border border-gray-600 hover:border-red-500/50 transition-colors flex items-center gap-2">
+                🗑️ ყველას გასუფთავება
+            </button>
+        </div>
+    </div>
+
+    <form method="POST" id="scheduleForm">
+        
+        <div class="bg-[#1a1a1a] border border-gray-700 rounded-xl p-6 mb-8 shadow-lg relative overflow-hidden group hover:border-blue-500/50 transition-colors">
+            <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+            
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                <div>
+                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                        <span class="text-2xl">✈️</span> შვებულების რეჟიმი
+                    </h3>
+                    <p class="text-gray-400 text-sm mt-1">მონიშნეთ პერიოდი, როცა არ იმუშავებთ.</p>
+                </div>
+                
+                <div class="flex flex-wrap items-end gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
+                    <div class="relative">
+                        <label class="text-[10px] text-gray-500 uppercase font-bold mb-1 block tracking-wider">პერიოდის არჩევა</label>
+                        <input type="text" id="vacationPicker" 
+                               class="bg-gray-900 border border-gray-600 text-white rounded-lg px-4 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 w-64 placeholder-gray-500 cursor-pointer"
+                               placeholder="აირჩიეთ თარიღები...">
+                        
+                        <input type="hidden" name="vacation_start" id="v_start" value="{{ user.barber.vacation_start if user.barber and user.barber.vacation_start else '' }}">
+                        <input type="hidden" name="vacation_end" id="v_end" value="{{ user.barber.vacation_end if user.barber and user.barber.vacation_end else '' }}">
+                    </div>
+                    
+                    <button type="button" onclick="clearVacation()" class="p-2 text-gray-500 hover:text-red-400 hover:bg-red-900/20 rounded-lg transition-colors" title="გაუქმება">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for schedule in schedules %}
+            <div class="day-card relative group bg-[#1a1a1a] rounded-xl border border-gray-800 p-5 transition-all duration-300 hover:border-gray-600 shadow-lg" 
+                 id="card_{{ schedule.day_of_week }}">
+                
+                <div class="flex items-center justify-between mb-4 relative z-20">
+                    <div class="flex items-center gap-3">
+                        <div class="day-icon w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 text-sm font-bold transition-colors">
+                            {{ schedule.day_of_week + 1 }}
+                        </div>
+                        <span class="font-bold text-lg text-gray-200">{{ days_map[schedule.day_of_week] }}</span>
+                    </div>
+
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" 
+                               name="is_working_{{ schedule.day_of_week }}" 
+                               id="check_{{ schedule.day_of_week }}" 
+                               class="sr-only peer"
+                               {% if schedule.is_working %}checked{% endif %}
+                               onchange="toggleDayState({{ schedule.day_of_week }})">
+                        <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-yellow-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                    </label>
+                </div>
+
+                <div class="time-inputs transition-all duration-300 opacity-50 pointer-events-none" id="times_{{ schedule.day_of_week }}">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs text-gray-500 font-medium uppercase tracking-wider">დასაწყისი</label>
+                            <input type="time" 
+                                   id="start_{{ schedule.day_of_week }}"
+                                   name="start_time_{{ schedule.day_of_week }}" 
+                                   value="{{ schedule.start_time.strftime('%H:%M') if schedule.start_time else '10:00' }}"
+                                   class="block w-full bg-gray-900 border border-gray-700 text-white rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm py-2.5">
+                        </div>
+                        
+                        <div class="space-y-1">
+                            <label class="text-xs text-gray-500 font-medium uppercase tracking-wider">დასასრული</label>
+                            <input type="time" 
+                                   id="end_{{ schedule.day_of_week }}"
+                                   name="end_time_{{ schedule.day_of_week }}" 
+                                   value="{{ schedule.end_time.strftime('%H:%M') if schedule.end_time else '19:00' }}"
+                                   class="block w-full bg-gray-900 border border-gray-700 text-white rounded-lg shadow-sm focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm py-2.5">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="rest-overlay absolute inset-0 bg-gray-900/60 backdrop-blur-[1px] rounded-xl z-10 flex items-center justify-center hidden" id="overlay_{{ schedule.day_of_week }}">
+                    <span class="px-3 py-1 bg-gray-800 rounded-full text-gray-400 text-xs font-medium border border-gray-700 shadow-lg flex items-center gap-2">
+                        <span>💤</span> ისვენებს
+                    </span>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="fixed bottom-6 left-0 right-0 flex justify-center z-40 px-4">
+            <button type="submit" class="bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-white font-bold py-3 px-10 rounded-2xl shadow-2xl transform transition hover:-translate-y-1 focus:ring-4 focus:ring-yellow-500/50 flex items-center gap-3">
+                <span>💾</span> შენახვა
+            </button>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/ka.js"></script>
+
+<script>
+// 1. Flatpickr Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    const startVal = document.getElementById('v_start').value;
+    const endVal = document.getElementById('v_end').value;
+    
+    const fp = flatpickr("#vacationPicker", {
+        mode: "range",
+        dateFormat: "Y-m-d",
+        defaultDate: startVal && endVal ? [startVal, endVal] : null,
+        locale: "ka",
+        theme: "dark",
+        onChange: function(selectedDates) {
+            if (selectedDates.length === 2) {
+                // +1 დღის კორექცია Timezone-ის გამო (საჭიროების შემთხვევაში)
+                const startDate = new Date(selectedDates[0].getTime() - (selectedDates[0].getTimezoneOffset() * 60000));
+                const endDate = new Date(selectedDates[1].getTime() - (selectedDates[1].getTimezoneOffset() * 60000));
+                
+                document.getElementById('v_start').value = startDate.toISOString().split('T')[0];
+                document.getElementById('v_end').value = endDate.toISOString().split('T')[0];
+            }
+        }
+    });
+
+    // Grid Initialization
+    for(let i=0; i<7; i++) toggleDayState(i);
+});
+
+function clearVacation() {
+    document.getElementById('vacationPicker')._flatpickr.clear();
+    document.getElementById('v_start').value = '';
+    document.getElementById('v_end').value = '';
+}
+
+// 2. Toggle Logic
+function toggleDayState(dayId) {
+    const checkbox = document.getElementById(`check_${dayId}`);
+    const card = document.getElementById(`card_${dayId}`);
+    const timeDiv = document.getElementById(`times_${dayId}`);
+    const overlay = document.getElementById(`overlay_${dayId}`);
+    const dayIcon = card.querySelector('.day-icon');
+    const inputs = timeDiv.querySelectorAll('input');
+
+    if (checkbox.checked) {
+        card.classList.add('border-yellow-600/40');
+        card.classList.remove('border-gray-800');
+        timeDiv.classList.remove('opacity-50', 'pointer-events-none');
+        overlay.classList.add('hidden');
+        dayIcon.classList.add('bg-yellow-600', 'text-white');
+        dayIcon.classList.remove('bg-gray-800', 'text-gray-400');
+        inputs.forEach(i => i.required = true);
+    } else {
+        card.classList.remove('border-yellow-600/40');
+        card.classList.add('border-gray-800');
+        timeDiv.classList.add('opacity-50', 'pointer-events-none');
+        overlay.classList.remove('hidden');
+        dayIcon.classList.remove('bg-yellow-600', 'text-white');
+        dayIcon.classList.add('bg-gray-800', 'text-gray-400');
+        inputs.forEach(i => i.required = false);
+    }
+}
+
+// 3. Smart Actions (აღდგენილია!)
+function applyStandardSchedule() {
+    for(let i=0; i<7; i++) {
+        const checkbox = document.getElementById(`check_${i}`);
+        const start = document.getElementById(`start_${i}`);
+        const end = document.getElementById(`end_${i}`);
+        
+        const isWeekend = (i === 5 || i === 6); // შაბათი-კვირა
+        
+        checkbox.checked = !isWeekend;
+        if(!isWeekend) {
+            start.value = '10:00';
+            end.value = '19:00';
+        }
+        toggleDayState(i);
+    }
+    showToast('სტანდარტული გრაფიკი (ორშ-პარ) გამოყენებულია');
+}
+
+function copyMondayToWeekdays() {
+    const monStart = document.getElementById('start_0').value;
+    const monEnd = document.getElementById('end_0').value;
+    const monChecked = document.getElementById('check_0').checked;
+
+    for(let i=1; i<5; i++) { // სამშაბათიდან პარასკევამდე
+        document.getElementById(`check_${i}`).checked = monChecked;
+        document.getElementById(`start_${i}`).value = monStart;
+        document.getElementById(`end_${i}`).value = monEnd;
+        toggleDayState(i);
+    }
+    showToast('ორშაბათის დროები კოპირებულია!');
+}
+
+function clearAllDays() {
+    if(confirm('ნამდვილად გსურთ ყველა დღის გამორთვა?')) {
+        for(let i=0; i<7; i++) {
+            document.getElementById(`check_${i}`).checked = false;
+            toggleDayState(i);
+        }
+    }
+}
+
+function showToast(msg) {
+    const toast = document.createElement('div');
+    toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-xl border border-gray-700 z-50 text-sm flex items-center gap-2 animate-bounce';
+    toast.innerHTML = `<span>✅</span> ${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

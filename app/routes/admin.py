@@ -1,11 +1,15 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, abort
 from flask_login import login_user, logout_user, login_required, current_user
 from functools import wraps
-from app.models import db, User, Service, Booking
-from datetime import datetime, timedelta
+from app.models import db, User, Service, Booking, BarberSchedule, Client
+from datetime import datetime, timedelta, time
+from app import limiter
 from sqlalchemy import func
 import logging
-
+import os
+from werkzeug.utils import secure_filename
+from flask import current_app
+from app.models import Barber
 # Blueprint-ის შექმნა
 admin_bp = Blueprint('admin', __name__)
 
@@ -17,6 +21,32 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
+  # ========================
+  # File Upload Handling
+  # ========================
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def save_avatar(file, username):
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        # უნიკალური სახელი რომ არ გადაეწეროს (მაგ: admin_image.jpg)
+        file_ext = filename.rsplit('.', 1)[1].lower()
+        new_filename = f"{username}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{file_ext}"
+
+        # საქაღალდის შექმნა თუ არ არსებობს
+        upload_path = os.path.join(current_app.root_path, 'static', 'uploads', 'avatars')
+        os.makedirs(upload_path, exist_ok=True)
+
+        # შენახვა
+        file.save(os.path.join(upload_path, new_filename))
+
+        # ბაზისთვის ბილიკის დაბრუნება
+        return f"uploads/avatars/{new_filename}"
+    return None
 
 # ========================
 # SECURITY: Failed Attempts Tracking
@@ -85,22 +115,13 @@ def admin_or_reception_required(f):
 # Authentication Routes (SECURED)
 # ========================
 @admin_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute") # ✅ Flask-Limiter-ის დეკორატორი
 def login():
-    """ლოგინის გვერდი - SECURED VERSION"""
+    """ლოგინის გვერდი - განახლებული უსაფრთხოება"""
     if current_user.is_authenticated:
         return redirect(url_for('admin.dashboard'))
     
-    client_ip = request.remote_addr
-    
-    # შეამოწმებს დაბლოკილია თუ არა
-    is_allowed, time_passed = check_failed_attempts(client_ip)
-    if not is_allowed:
-        remaining_time = timedelta(minutes=30) - time_passed
-        minutes_left = int(remaining_time.total_seconds() / 60)
-        
-        flash(f'ძალიან ბევრი წარუმატებელი მცდელობა! სცადეთ {minutes_left} წუთში.', 'danger')
-        logging.warning(f"🚫 BLOCKED LOGIN PAGE ACCESS: {client_ip}")
-        return render_template('admin/login.html'), 429
+    # აქ აღარ გვჭირდება check_failed_attempts, limiter თავად მიხედავს
     
     if request.method == 'POST':
         username = request.form.get('username')
@@ -110,29 +131,14 @@ def login():
         user = User.query.filter_by(username=username).first()
         
         if user and user.check_password(password) and user.is_active:
-            # ✅ წარმატებული login
-            clear_failed_attempts(client_ip)
             login_user(user, remember=remember)
-            
-            logging.info(f"✅ SUCCESSFUL LOGIN - IP: {client_ip}, User: {username}, Role: {user.role}")
+            logging.info(f"✅ SUCCESSFUL LOGIN - User: {username}")
             flash(f'კეთილი იყოს შენი მობრძანება, {user.get_full_name()}!', 'success')
-            
-            # Redirect-ი როლის მიხედვით
             next_page = request.args.get('next')
             return redirect(next_page or url_for('admin.dashboard'))
         else:
-            # ❌ არასწორი credentials
-            record_failed_attempt(client_ip)
-            
-            attempts_count = failed_attempts.get(client_ip, (0, None))[0]
-            remaining = 5 - attempts_count
-            
-            logging.warning(f"❌ FAILED LOGIN - IP: {client_ip}, User: {username}, Attempts: {attempts_count}/5")
-            
-            if remaining > 0:
-                flash(f'არასწორი იუზერნეიმი ან პაროლი! დარჩა {remaining} მცდელობა.', 'danger')
-            else:
-                flash('ძალიან ბევრი წარუმატებელი მცდელობა! დაბლოკილი ხართ 30 წუთით.', 'danger')
+            logging.warning(f"❌ FAILED LOGIN - User: {username}")
+            flash('არასწორი იუზერნეიმი ან პაროლი!', 'danger')
     
     return render_template('admin/login.html')
 
@@ -153,6 +159,75 @@ def logout():
 # Dashboard
 # ========================
 @admin_bp.route('/dashboard')
+@login_required
+def dashboard():
+    """მთავარი დაფა (Dashboard)"""
+    today = datetime.utcnow().date()
+    
+    # სტატისტიკა
+    if current_user.is_barber():
+        # ✅ ბარბერი ხედავს მხოლოდ თავის სტატისტიკას
+        if not current_user.barber:
+            # თუ ბარბერის პროფილი არ არსებობს
+            stats = {
+                'today_bookings': 0,
+                'pending_bookings': 0,
+                'total_bookings': 0,
+                'total_barbers': 1,
+                'total_services': Service.query.filter_by(is_active=True).count()
+            }
+            return render_template('admin/dashboard.html', 
+                                 stats=stats, 
+                                 recent_bookings=[])
+        
+        barber_id = current_user.barber.id  # ✅ სწორი Barber ID
+        
+        today_bookings = Booking.query.filter(
+            Booking.barber_id == barber_id,
+            func.date(Booking.start_time) == today
+        ).count()
+        
+        pending_bookings = Booking.query.filter(
+            Booking.barber_id == barber_id,
+            Booking.status == 'pending'
+        ).count()
+        
+        total_bookings = Booking.query.filter_by(barber_id=barber_id).count()
+        
+        recent_bookings = Booking.query.filter_by(barber_id=barber_id)\
+            .order_by(Booking.start_time.desc()).limit(5).all()
+        
+        # ✅ ბარბერს არ უჩვენოს სხვა ბარბერების რაოდენობა
+        total_barbers = 1
+        total_services = Service.query.filter_by(is_active=True).count()
+        
+    else:
+        # ადმინი და რეცეფცია ხედავენ ყველა სტატისტიკას
+        today_bookings = Booking.query.filter(
+            func.date(Booking.start_time) == today
+        ).count()
+        
+        pending_bookings = Booking.query.filter_by(status='pending').count()
+        total_bookings = Booking.query.count()
+        
+        recent_bookings = Booking.query.order_by(Booking.start_time.desc()).limit(5).all()
+        
+        total_barbers = User.query.filter_by(role='barber', is_active=True).count()
+        total_services = Service.query.filter_by(is_active=True).count()
+    
+    stats = {
+        'today_bookings': today_bookings,
+        'pending_bookings': pending_bookings,
+        'total_bookings': total_bookings,
+        'total_barbers': total_barbers,
+        'total_services': total_services
+    }
+    
+    return render_template('admin/dashboard.html', 
+                         stats=stats, 
+                         recent_bookings=recent_bookings)
+
+
 @login_required
 def dashboard():
     """მთავარი დაფა (Dashboard)"""
@@ -493,6 +568,188 @@ def booking_delete(id):
         return redirect(url_for('admin.bookings'))
 
 
+
+# ========================
+# Schedule Management
+# ========================
+
+@admin_bp.route('/schedule')
+@login_required
+def schedule_index():
+
+    print("DEBUG: Schedule route accessed!")
+    print(f"DEBUG: User ID: {current_user.id}, Role: {current_user.role}")
+    """გრაფიკების მართვის მთავარი გვერდი"""
+    # თუ ბარბერია, პირდაპირ თავის გრაფიკზე გადავამისამართოთ
+    if current_user.is_barber():
+        return redirect(url_for('admin.schedule_edit', user_id=current_user.id))
+    
+    # თუ ადმინი/რეცეფციაა, ვაჩვენოთ ბარბერების სია ასარჩევად
+    if current_user.is_admin() or current_user.is_reception():
+        barbers = User.query.filter_by(role='barber', is_active=True).all()
+        return render_template('admin/schedule_list.html', barbers=barbers)
+    
+    flash('წვდომა აკრძალულია', 'danger')
+    return redirect(url_for('admin.dashboard'))
+
+
+@admin_bp.route('/schedule/edit/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def schedule_edit(user_id):
+    """კონკრეტული ბარბერის გრაფიკის რედაქტირება"""
+    
+    # უსაფრთხოება: ბარბერმა მხოლოდ საკუთარი გრაფიკი უნდა ნახოს
+    if current_user.is_barber() and current_user.id != user_id:
+        flash('თქვენ მხოლოდ საკუთარი გრაფიკის შეცვლა შეგიძლიათ!', 'danger')
+        return redirect(url_for('admin.schedule_edit', user_id=current_user.id))
+    
+    # ადმინის გარდა სხვას არ შეუძლია სხვისი გრაფიკის ნახვა
+    if not (current_user.is_admin() or current_user.is_reception() or current_user.id == user_id):
+        flash('წვდომა აკრძალულია', 'danger')
+        return redirect(url_for('admin.dashboard'))
+
+    target_user = User.query.get_or_404(user_id)
+
+    if request.method == 'POST':
+        try:
+            # 1. გრაფიკის შენახვა
+            for day in range(7):
+                # ... (შენი ძველი კოდი გრაფიკისთვის იგივე რჩება) ...
+                pass # (უბრალოდ აღვნიშნე რომ აქ კოდია)
+
+            # ✅ 2. შვებულების შენახვა (განახლებული ლოგიკა)
+            v_start = request.form.get('vacation_start')
+            v_end = request.form.get('vacation_end')
+            
+            # თუ Barber პროფილი არ აქვს, შევუქმნათ
+            if not target_user.barber:
+                new_barber = Barber(
+                    user_id=target_user.id, 
+                    name=target_user.get_full_name()
+                )
+                db.session.add(new_barber)
+                db.session.flush() # რომ განახლდეს relationship
+                # ახლა target_user.barber უკვე არსებობს
+
+            if v_start and v_end:
+                target_user.barber.vacation_start = datetime.strptime(v_start, '%Y-%m-%d').date()
+                target_user.barber.vacation_end = datetime.strptime(v_end, '%Y-%m-%d').date()
+            else:
+                target_user.barber.vacation_start = None
+                target_user.barber.vacation_end = None
+
+            db.session.commit()
+            flash(f'{target_user.first_name}-ის გრაფიკი და შვებულება განახლდა!', 'success')
+            
+            if current_user.is_admin() or current_user.is_reception():
+                return redirect(url_for('admin.schedule_index'))
+            return redirect(url_for('admin.schedule_edit', user_id=user_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            logging.error(f"Schedule update failed: {str(e)}")
+            flash(f'შეცდომა: {str(e)}', 'danger')
+    
+    # POST მოთხოვნა (შენახვა)
+    if request.method == 'POST':
+        try:
+            # 7 დღისთვის გავდივართ ციკლს
+            for day in range(7):
+                # ფორმიდან მონაცემების წამოღება
+                is_working = request.form.get(f'is_working_{day}') == 'on'
+                start_str = request.form.get(f'start_time_{day}')
+                end_str = request.form.get(f'end_time_{day}')
+                
+                # არსებული ჩანაწერის მოძებნა ან ახლის შექმნა
+                schedule = BarberSchedule.query.filter_by(
+                    barber_id=user_id, 
+                    day_of_week=day
+                ).first()
+                
+                if not schedule:
+                    schedule = BarberSchedule(barber_id=user_id, day_of_week=day)
+                    db.session.add(schedule)
+                
+                # განახლება
+                schedule.is_working = is_working
+                if is_working and start_str and end_str:
+                    schedule.start_time = datetime.strptime(start_str, '%H:%M').time()
+                    schedule.end_time = datetime.strptime(end_str, '%H:%M').time()
+                
+            db.session.commit()
+            flash(f'{target_user.first_name}-ის გრაფიკი განახლდა!', 'success')
+            
+            if current_user.is_admin() or current_user.is_reception():
+                return redirect(url_for('admin.schedule_index'))
+            return redirect(url_for('admin.schedule_edit', user_id=user_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'შეცდომა: {str(e)}', 'danger')
+
+    # GET მოთხოვნა (ჩვენება)
+    # ვტვირთავთ არსებულ გრაფიკს, დღეების მიხედვით დალაგებულს
+    schedules = BarberSchedule.query.filter_by(barber_id=user_id).order_by(BarberSchedule.day_of_week).all()
+    
+    # თუ გრაფიკი ჯერ არ აქვს, შევქმნათ დროებითი სია ჩვენებისთვის
+    if not schedules:
+        schedules = []
+        for day in range(7):
+            # Default: 10:00 - 19:00
+            sched = BarberSchedule(
+                day_of_week=day, 
+                start_time=time(10, 0), 
+                end_time=time(19, 0), 
+                is_working=(day < 6) # კვირის გარდა
+            )
+            schedules.append(sched)
+
+    # დღეების სახელები ქართულად
+    days_map = {
+        0: 'ორშაბათი', 1: 'სამშაბათი', 2: 'ოთხშაბათი',
+        3: 'ხუთშაბათი', 4: 'პარასკევი', 5: 'შაბათი', 6: 'კვირა'
+    }
+
+    return render_template(
+        'admin/schedule_edit.html', 
+        user=target_user, 
+        schedules=schedules, 
+        days_map=days_map
+    )
+
+# ========================
+# Clients Management (CRM)
+# ========================
+
+@admin_bp.route('/clients')
+@admin_or_reception_required
+def clients():
+    """კლიენტების ბაზა"""
+    # ვიღებთ კლიენტებს და ვაზუსტებთ ჯავშნების რაოდენობას
+    clients = Client.query.order_by(Client.created_at.desc()).all()
+    return render_template('admin/clients.html', clients=clients)
+
+
+@admin_bp.route('/clients/edit/<int:id>', methods=['GET', 'POST'])
+@admin_or_reception_required
+def client_edit(id):
+    """კლიენტის რედაქტირება (დაბლოკვა/შენიშვნები)"""
+    client = Client.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        client.name = request.form.get('name')
+        client.email = request.form.get('email')
+        client.notes = request.form.get('notes')
+        
+        # Checkbox handling
+        client.is_blocked = request.form.get('is_blocked') == 'on'
+        
+        db.session.commit()
+        flash('კლიენტის ინფორმაცია განახლდა!', 'success')
+        return redirect(url_for('admin.clients'))
+        
+    return render_template('admin/client_form.html', client=client)
+
 # ========================
 # Users Management (Admin Only)
 # ========================
@@ -507,7 +764,7 @@ def users():
 @admin_bp.route('/users/create', methods=['GET', 'POST'])
 @admin_required
 def user_create():
-    """ახალი იუზერის შექმნა"""
+    """ახალი იუზერის შექმნა (+ ბარბერის პროფილის და ფოტოს დამატება)"""
     if request.method == 'POST':
         try:
             username = request.form.get('username')
@@ -519,11 +776,12 @@ def user_create():
             role = request.form.get('role')
             specialization = request.form.get('specialization')
             
-            # შემოწმება - იუზერნეიმი უნიკალურია
+            # 1. შემოწმება - იუზერნეიმი უნიკალურია
             if User.query.filter_by(username=username).first():
                 flash('ეს იუზერნეიმი უკვე დაკავებულია!', 'danger')
                 return redirect(url_for('admin.user_create'))
             
+            # 2. User-ის შექმნა
             new_user = User(
                 username=username,
                 email=email,
@@ -536,10 +794,47 @@ def user_create():
             new_user.set_password(password)
             
             db.session.add(new_user)
+            db.session.flush()  # ID-ის მისაღებად
+
+            # 3. ფოტოს დამუშავება
+            image_url = None
+            if 'profile_image' in request.files:
+                file = request.files['profile_image']
+                if file.filename != '':
+                    image_url = save_avatar(file, username)
+
+            # 4. თუ ბარბერია -> ვქმნით Barber ჩანაწერს და გრაფიკს
+            if role == 'barber':
+                # ა) Barber პროფილის შექმნა (სურათი აქ ინახება)
+                new_barber = Barber(
+                    user_id=new_user.id,
+                    name=f"{first_name} {last_name}",
+                    position="Barber",
+                    specialties=specialization,
+                    phone=phone,
+                    email=email,
+                    image_url=image_url  # <--- აი ფოტო
+                )
+                db.session.add(new_barber)
+
+                # ბ) გრაფიკის შექმნა (შენი არსებული კოდი)
+                for day in range(7):
+                    is_work_day = day < 5
+                    schedule = BarberSchedule(
+                        barber_id=new_user.id,
+                        day_of_week=day,
+                        start_time=time(10,0),
+                        end_time=time(19,0),
+                        is_working=is_work_day
+                    )
+                    db.session.add(schedule)
+
+                logging.info(f"🗓️ WORK SCHEDULE & PROFILE CREATED for Barber: {username}")
+
             db.session.commit()
-            
+
             logging.info(f"👤 NEW USER CREATED - Username: {username}, Role: {role}")
-            flash('იუზერი წარმატებით შეიქმნა!', 'success')
+            flash('იუზერი (და ბარბერის პროფილი) წარმატებით შეიქმნა!', 'success')
             return redirect(url_for('admin.users'))
             
         except Exception as e:
@@ -564,6 +859,11 @@ def user_edit(id):
             user.role = request.form.get('role')
             user.specialization = request.form.get('specialization')
             user.is_active = request.form.get('is_active') == 'on'
+
+            if user.barber:
+                user.barber.name = f"{user.first_name} {user.last_name}"
+                # ასევე განვაახლოთ სპეციალობაც თუ შეიცვალა
+                user.barber.specialties = request.form.get('specialization')
             
             # პაროლის შეცვლა (თუ მითითებულია)
             new_password = request.form.get('password')
@@ -584,21 +884,37 @@ def user_edit(id):
 @admin_bp.route('/users/delete/<int:id>', methods=['POST'])
 @admin_required
 def user_delete(id):
-    """იუზერის წაშლა"""
+    """იუზერის წაშლა (დაკავშირებული მონაცემების გასუფთავებით)"""
     user = User.query.get_or_404(id)
     
-    # არ დავუშვათ საკუთარი თავის წაშლა
+    # 1. საკუთარი თავის წაშლის აკრძალვა
     if user.id == current_user.id:
         flash('თქვენ არ შეგიძლიათ საკუთარი თავის წაშლა!', 'danger')
         return redirect(url_for('admin.users'))
     
     try:
+        # 2. თუ ბარბერია, ჯერ ვშლით მის გრაფიკს და პროფილს
+        if user.role == 'barber':
+            # ა) წავშალოთ გრაფიკი (BarberSchedule)
+            # ეს იწვევდა "NotNullViolation" ერორს
+            BarberSchedule.query.filter_by(barber_id=user.id).delete()
+            
+            # ბ) წავშალოთ ბარბერის პროფილი (Barber)
+            # თუ სურათი აქვს, ისიც უნდა წაიშალოს წესით, მაგრამ ჯერ ბაზიდან ამოვიღოთ
+            if user.barber:
+                db.session.delete(user.barber)
+
+        # 3. ახლა უკვე უსაფრთხოა იუზერის წაშლა
         db.session.delete(user)
         db.session.commit()
-        flash('იუზერი წარმატებით წაიშალა!', 'success')
+        
+        flash('იუზერი და მისი მონაცემები წარმატებით წაიშალა!', 'success')
+        
     except Exception as e:
         db.session.rollback()
-        flash(f'შეცდომა: {str(e)}', 'danger')
+        # ერორის ლოგირება
+        logging.error(f"User deletion failed: {str(e)}")
+        flash(f'შეცდომა წაშლისას: {str(e)}', 'danger')
     
     return redirect(url_for('admin.users'))
 

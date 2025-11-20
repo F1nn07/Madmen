@@ -248,6 +248,43 @@
         border-color: var(--primary-gold);
         color: var(--primary-gold);
     }
+    
+    /* ✅ ახალი სტილები ფაილის ატვირთვისთვის */
+    .file-upload-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .current-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary-gold);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    input[type="file"] {
+        color: var(--text-secondary);
+        font-size: 13px;
+    }
+
+    input[type="file"]::file-selector-button {
+        margin-right: 15px;
+        border: none;
+        background: var(--primary-gold);
+        padding: 10px 20px;
+        border-radius: 6px;
+        color: #fff;
+        cursor: pointer;
+        transition: background .2s ease-in-out;
+        font-weight: 600;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+        background: #96683a;
+    }
 
     @media (max-width: 768px) {
         .form-grid {
@@ -266,14 +303,19 @@
             width: 100%;
             justify-content: center;
         }
+        
+        .file-upload-wrapper {
+            flex-direction: column;
+            align-items: flex-start;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="form-container">
-    <form method="POST" action="{{ url_for('admin.user_edit', id=user.id) if user else url_for('admin.user_create') }}">
-        <!-- ძირითადი ინფორმაცია -->
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin.user_edit', id=user.id) if user else url_for('admin.user_create') }}">
+        
         <div class="form-card">
             <div class="form-header">
                 <h2>👤 ძირითადი ინფორმაცია</h2>
@@ -369,7 +411,6 @@
             </div>
         </div>
 
-        <!-- როლი და წვდომა -->
         <div class="form-card">
             <div class="form-header">
                 <h2>🔑 როლი და წვდომა</h2>
@@ -441,10 +482,22 @@
             </div>
         </div>
 
-        <!-- ბარბერის დამატებითი ინფო -->
         <div class="form-card" id="barberSection" style="display: none;">
             <div class="form-header">
                 <h2>✂️ ბარბერის ინფორმაცია</h2>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label">პროფილის სურათი</label>
+                <div class="file-upload-wrapper">
+                    {% if user and user.barber and user.barber.image_url %}
+                        <img src="{{ url_for('static', filename=user.barber.image_url) }}" class="current-avatar" alt="Profile">
+                    {% endif %}
+                    <div>
+                        <input type="file" name="profile_image" accept="image/*">
+                        <p class="input-hint">რეკომენდირებულია კვადრატული ფოტო (500x500px)</p>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -459,7 +512,6 @@
             </div>
         </div>
 
-        <!-- ფორმის ღილაკები -->
         <div class="form-card">
             <div class="form-actions">
                 <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">
